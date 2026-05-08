@@ -1,59 +1,96 @@
 version: "3.9"
 
+networks:
+  mern-network:
+    driver: bridge # réseau privé isolé — les 3 services se voient par leur nom
+
+volumes:
+  mongo_data: # volume nommé — données MongoDB persistées
+
 services:
+  # ── Base de données ──────────────────────────────────────
   mongo:
     image: mongo:7
     container_name: mongo
     restart: unless-stopped
+    networks:
+      - mern-network
     ports:
-      - "27017:27017"
+      - "27017:27017" # exposé uniquement pour debug local (à retirer en prod)
     volumes:
       - mongo_data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s   # vérifie toutes les 10 secondes
-      timeout: 5s     # abandon si pas de réponse en 5s
-      retries: 5      # déclare unhealthy après 5 échecs
-      start_period: 20s # laisse 20s à MongoDB pour démarrer avant de tester
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
+  # ── API Backend ──────────────────────────────────────────
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: portfolio-backend # nom de l'image pour Docker Hub
     container_name: backend
     restart: unless-stopped
+    networks:
+      - mern-network
     ports:
       - "5000:5000"
     environment:
-      - MONGO_URI=mongodb://mongo:27017/filrouge
+      - NODE_ENV=production
       - PORT=5000
+      - MONGO_URI=mongodb://mongo:27017/filrouge # "mongo" résolu par DNS interne
+      - JWT_SECRET=${JWT_SECRET} # injecté depuis .env racine
     depends_on:
       mongo:
-        condition: service_healthy  # attend que mongo soit vraiment prêt
+        condition: service_healthy
     volumes:
-      - ./backend/uploads:/app/uploads
+      - ./backend/uploads:/app/uploads # bind mount — images persistées
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:5000/api/health",
+        ]
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 10s
 
+  # ── Frontend ─────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://localhost:5000/api
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:5000/api} # valeur par défaut si .env absent
+    image: portfolio-frontend # nom de l'image pour Docker Hub
     container_name: frontend
     restart: unless-stopped
+    networks:
+      - mern-network
     ports:
       - "80:80"
     depends_on:
       backend:
-        condition: service_healthy  # attend que le backend soit vraiment prêt
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80",
+        ]
       interval: 15s
       timeout: 5s
       retries: 3
-
-volumes:
-  mongo_data:
+      start_period: 10s
