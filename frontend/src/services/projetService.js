@@ -34,7 +34,9 @@ async function handleResponse(response) {
     try {
       const data = await response.json();
       if (data && data.message) message = data.message;
-    } catch (e) {}
+    } catch {
+      // The API may return an empty or non-JSON error body.
+    }
     throw new Error(message);
   }
 

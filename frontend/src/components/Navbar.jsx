@@ -1,5 +1,5 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 function getHomeLinkClass({ isActive }) {
   return `inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
