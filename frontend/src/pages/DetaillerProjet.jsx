@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getProjectById, getImageUrl } from "../services/projetService";
+import { getImageUrl, getProjectById } from "../services/projetService";
 
 export default function DetaillerProjet() {
   const { id } = useParams();
@@ -29,12 +29,12 @@ export default function DetaillerProjet() {
 
   if (loading) {
     return (
-      <section className="max-w-4xl mx-auto space-y-6">
-        <Link to="/projets" className="text-sm text-rose-400 hover:underline">
-          ← Retour à la liste
+      <section className="mx-auto max-w-4xl space-y-6">
+        <Link to="/projets" className="text-sm text-rose-300 hover:underline">
+          &larr; Retour à la liste
         </Link>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-6">
           <p className="text-slate-400">Chargement du projet...</p>
         </div>
       </section>
@@ -43,13 +43,13 @@ export default function DetaillerProjet() {
 
   if (error || !project) {
     return (
-      <section className="max-w-4xl mx-auto space-y-6">
-        <Link to="/projets" className="text-sm text-rose-400 hover:underline">
-          ← Retour à la liste
+      <section className="mx-auto max-w-4xl space-y-6">
+        <Link to="/projets" className="text-sm text-rose-300 hover:underline">
+          &larr; Retour à la liste
         </Link>
 
-        <div className="rounded-2xl border border-red-800 bg-red-950/30 p-6">
-          <p className="text-red-400 text-sm">
+        <div className="rounded-lg border border-red-800 bg-red-950/30 p-6">
+          <p className="text-sm text-red-400">
             {error || "Projet introuvable."}
           </p>
         </div>
@@ -60,32 +60,32 @@ export default function DetaillerProjet() {
   const imageSrc = getImageUrl(project.image);
 
   return (
-    <section className="max-w-5xl mx-auto space-y-8">
+    <section className="mx-auto max-w-5xl space-y-8">
       <Link
         to="/projets"
-        className="inline-flex text-sm text-rose-400 hover:underline"
+        className="inline-flex text-sm text-rose-300 hover:underline"
       >
-        ← Retour à la liste
+        &larr; Retour à la liste
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+        <div className="motion-fade-up overflow-hidden rounded-lg border border-slate-800 bg-slate-900/80">
           {imageSrc ? (
             <img
               src={imageSrc}
               alt={project.libelle}
-              className="h-full w-full object-cover"
+              className="h-full min-h-80 w-full object-cover"
             />
           ) : (
-            <div className="flex h-80 items-center justify-center text-slate-500 text-sm">
+            <div className="flex h-80 items-center justify-center text-sm text-slate-500">
               Aucune image disponible
             </div>
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="motion-fade-up space-y-6" style={{ "--motion-delay": "120ms" }}>
           <div>
-            <p className="text-sm font-mono uppercase tracking-wider text-rose-400">
+            <p className="text-sm font-mono uppercase tracking-[0.3em] text-rose-300">
               Projet
             </p>
             <h1 className="mt-2 text-3xl font-bold text-white">
@@ -93,20 +93,20 @@ export default function DetaillerProjet() {
             </h1>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-            <h2 className="text-lg font-semibold text-white mb-3">
+          <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-5">
+            <h2 className="mb-3 text-lg font-semibold text-white">
               Description
             </h2>
-            <p className="text-slate-400 leading-7">
+            <p className="leading-7 text-slate-400">
               {project.description || "Aucune description disponible."}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-            <h2 className="text-lg font-semibold text-white mb-3">
+          <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-5">
+            <h2 className="mb-3 text-lg font-semibold text-white">
               Informations complémentaires
             </h2>
-            <p className="text-slate-400 leading-7">
+            <p className="leading-7 text-slate-400">
               {project.details || "Aucun détail supplémentaire disponible."}
             </p>
           </div>

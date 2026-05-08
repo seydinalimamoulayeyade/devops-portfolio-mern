@@ -9,8 +9,8 @@ export default function ProjectCard({ project, onDelete }) {
   const imageSrc = getImageUrl(project.image);
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-rose-400/70 hover:shadow-[0_0_0_1px_rgba(244,63,94,0.12)]">
-      <div className="relative h-48 overflow-hidden bg-slate-800">
+    <article className="motion-hover-lift group overflow-hidden rounded-lg border border-slate-800 bg-slate-900/90 shadow-sm transition-all duration-300 hover:border-rose-400/70 hover:shadow-[0_0_0_1px_rgba(244,63,94,0.12)]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-slate-800">
         {imageSrc ? (
           <img
             src={imageSrc}
@@ -18,53 +18,54 @@ export default function ProjectCard({ project, onDelete }) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-slate-500 text-sm">
+          <div className="flex h-full items-center justify-center text-sm text-slate-500">
             Aucune image
           </div>
         )}
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-80"></div>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent" />
       </div>
 
-      <div className="p-5 space-y-4">
+      <div className="space-y-4 p-5">
         <div className="space-y-2">
           <Link
             to={`/projets/${projectId}`}
-            className="line-clamp-2 text-lg font-semibold text-white transition-colors hover:text-rose-400"
+            className="line-clamp-2 text-lg font-semibold text-white transition-colors hover:text-rose-300"
           >
             {project.libelle}
           </Link>
 
           <p className="line-clamp-3 text-sm leading-6 text-slate-400">
-            {project.description}
+            {project.description || "Aucune description disponible."}
           </p>
         </div>
 
         <div className="flex items-center justify-between gap-3 pt-2">
           <Link
             to={`/projets/${projectId}`}
-            className="text-sm font-medium text-rose-400 transition-colors hover:text-rose-300"
+            className="text-sm font-medium text-rose-300 transition-colors hover:text-rose-200"
           >
-            Voir le détail →
+            Voir le détail &rarr;
           </Link>
 
-          {isAuthenticated && (
+          {isAuthenticated ? (
             <div className="flex gap-2">
               <Link
                 to={`/modifier/${projectId}`}
-                className="inline-flex items-center rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition-all hover:border-rose-400 hover:text-rose-400"
+                className="inline-flex items-center rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition-all hover:border-rose-400 hover:text-white"
               >
                 Modifier
               </Link>
 
               <button
+                type="button"
                 onClick={() => onDelete(projectId)}
                 className="inline-flex items-center rounded-lg bg-red-500 px-3 py-2 text-sm font-medium text-white transition-all hover:bg-red-600"
               >
                 Supprimer
               </button>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </article>

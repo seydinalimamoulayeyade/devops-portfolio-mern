@@ -42,9 +42,9 @@ export default function Login() {
   }
 
   return (
-    <section className="mx-auto mt-16 max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-sm">
+    <section className="motion-fade-up mx-auto mt-16 max-w-md rounded-lg border border-slate-800 bg-slate-900/85 p-8 shadow-sm">
       <div className="mb-6 space-y-2 text-center">
-        <p className="text-sm font-mono uppercase tracking-[0.3em] text-rose-400">
+        <p className="text-sm font-mono uppercase tracking-[0.3em] text-rose-300">
           Authentification
         </p>
         <h1 className="text-3xl font-bold text-white">Connexion</h1>
@@ -54,7 +54,7 @@ export default function Login() {
       </div>
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-red-800 bg-red-950/30 px-4 py-3">
+        <div className="mb-4 rounded-lg border border-red-800 bg-red-950/30 px-4 py-3">
           <p className="text-sm text-red-400">{error}</p>
         </div>
       ) : null}
@@ -67,7 +67,8 @@ export default function Login() {
             placeholder="admin@test.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"
+            autoComplete="email"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-600 focus:border-rose-400"
             required
           />
         </div>
@@ -76,10 +77,11 @@ export default function Login() {
           <label className="mb-2 block text-sm text-slate-300">Mot de passe</label>
           <input
             type="password"
-            placeholder="••••••••"
+            placeholder="Mot de passe"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"
+            autoComplete="current-password"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-600 focus:border-rose-400"
             required
           />
         </div>
@@ -87,7 +89,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-rose-500 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-lg bg-rose-500 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Connexion en cours..." : "Se connecter"}
         </button>

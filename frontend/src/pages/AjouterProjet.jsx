@@ -117,7 +117,7 @@ export default function AjouterProjet() {
 
   if (loading) {
     return (
-      <section className="max-w-2xl mx-auto space-y-6">
+      <section className="mx-auto max-w-2xl space-y-6">
         <h1 className="text-3xl font-bold text-white">
           Chargement du projet...
         </h1>
@@ -126,12 +126,15 @@ export default function AjouterProjet() {
   }
 
   return (
-    <section className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white">
+    <section className="mx-auto max-w-2xl space-y-6">
+      <div className="motion-fade-up">
+        <p className="text-sm font-mono uppercase tracking-[0.3em] text-rose-300">
+          {isEditing ? "Edition" : "Nouveau projet"}
+        </p>
+        <h1 className="mt-2 text-3xl font-bold text-white">
           {isEditing ? "Modifier un projet" : "Ajouter un projet"}
         </h1>
-        <p className="text-slate-400 mt-2">
+        <p className="mt-2 text-slate-400">
           {isEditing
             ? "Mettez à jour les informations du projet. Vous pouvez conserver l'image actuelle ou en choisir une nouvelle."
             : "Remplissez le formulaire et choisissez une image pour créer un nouveau projet."}
@@ -140,7 +143,8 @@ export default function AjouterProjet() {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-5 rounded-2xl border border-slate-800 bg-slate-900 p-6"
+        className="motion-fade-up space-y-5 rounded-lg border border-slate-800 bg-slate-900/80 p-6"
+        style={{ "--motion-delay": "120ms" }}
       >
         <div>
           <label className="mb-2 block text-sm text-slate-300">Libellé</label>
@@ -150,7 +154,7 @@ export default function AjouterProjet() {
             value={form.libelle}
             onChange={handleChange}
             required
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-rose-400"
           />
         </div>
 
@@ -164,7 +168,7 @@ export default function AjouterProjet() {
             onChange={handleChange}
             rows="4"
             required
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-rose-400"
           />
         </div>
 
@@ -177,14 +181,14 @@ export default function AjouterProjet() {
             name="image"
             accept="image/*"
             onChange={handleImageChange}
-            className="w-full rounded-xl border border-dashed border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-rose-500 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-rose-600"
+            className="w-full rounded-lg border border-dashed border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-rose-500 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-rose-600"
           />
           <p className="mt-2 text-xs text-slate-500">
             Formats acceptés : JPG, PNG, WEBP ou GIF. Taille maximale : 5 Mo.
           </p>
 
           {previewSrc ? (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
+            <div className="mt-4 overflow-hidden rounded-lg border border-slate-800 bg-slate-950">
               <img
                 src={previewSrc}
                 alt="Aperçu du projet"
@@ -195,7 +199,7 @@ export default function AjouterProjet() {
               />
             </div>
           ) : (
-            <div className="mt-4 flex h-40 items-center justify-center rounded-2xl border border-dashed border-slate-800 bg-slate-950 text-sm text-slate-500">
+            <div className="mt-4 flex h-40 items-center justify-center rounded-lg border border-dashed border-slate-800 bg-slate-950 text-sm text-slate-500">
               Aucun aperçu disponible
             </div>
           )}
@@ -208,17 +212,17 @@ export default function AjouterProjet() {
             value={form.details}
             onChange={handleChange}
             rows="5"
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-rose-400"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-rose-400"
           />
         </div>
 
-        {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+        {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex rounded-xl bg-rose-500 px-5 py-3 text-sm font-medium text-white hover:bg-rose-600 disabled:opacity-50"
+            className="inline-flex rounded-lg bg-rose-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-600 disabled:opacity-50"
           >
             {saving
               ? "Enregistrement..."
@@ -230,7 +234,7 @@ export default function AjouterProjet() {
           <button
             type="button"
             onClick={() => navigate("/projets")}
-            className="inline-flex rounded-xl border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 hover:border-slate-500"
+            className="inline-flex rounded-lg border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
           >
             Annuler
           </button>
