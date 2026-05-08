@@ -21,7 +21,10 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #020617;
+  background:
+    linear-gradient(115deg, rgba(15, 23, 42, 0.9), transparent 34%),
+    linear-gradient(245deg, rgba(8, 145, 178, 0.16), transparent 28%),
+    #020617;
 }
 
 * {
@@ -42,6 +45,30 @@ select {
 
 #root {
   min-height: 100vh;
+}
+
+::selection {
+  color: #ffffff;
+  background: rgba(244, 63, 94, 0.55);
+}
+
+.app-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black 0%, black 42%, transparent 86%);
+}
+
+.glass-panel {
+  border: 1px solid rgba(30, 41, 59, 0.9);
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow: 0 24px 80px rgba(2, 6, 23, 0.32);
+  backdrop-filter: blur(18px);
+}
+
+.text-balance {
+  text-wrap: balance;
 }
 
 @keyframes hero-image-drift {
@@ -230,4 +257,5 @@ select {
   .motion-hover-lift:hover {
     transform: none;
   }
+
 }
