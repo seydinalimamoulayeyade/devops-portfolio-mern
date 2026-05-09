@@ -9,26 +9,12 @@ const stackItems = [
   ["Dev", "MERN, Laravel et Tailwind pour livrer vite."],
 ];
 
-const skillItems = [
-  ["DevOps", "Docker, Jenkins, SonarQube, Kubernetes, Terraform"],
-  ["Observabilité", "Prometheus, Grafana, métriques, alertes"],
-  ["Sécurité", "Trivy, scans d'images, qualité et durcissement"],
-  ["Développement", "MERN stack, Laravel, Tailwind CSS"],
-];
-
-const approachItems = [
-  "Dockerisation actuelle du portfolio MERN avec services séparés",
-  "Jenkins, SonarQube et Trivy comme compétences CI/CD à intégrer étape par étape",
-  "AWS comme cible cloud pour les futurs déploiements",
-  "Kubernetes, Terraform et Prometheus/Grafana comme prochaines couches DevOps",
-];
-
 const pipelineSteps = ["Code", "Docker", "Compose", "Run"];
 
-const deliveryItems = [
-  ["Aujourd'hui", "Application MERN dockerisée avec frontend, backend et MongoDB"],
-  ["Ensuite", "Pipeline Jenkins, qualité SonarQube et scans Trivy"],
-  ["Après", "AWS, Kubernetes, Terraform et monitoring Prometheus/Grafana"],
+const dockerHighlights = [
+  ["Services MERN", "Frontend React, API Express et MongoDB orchestrés avec Docker Compose.", "service"],
+  ["Images Docker Hub", "Images frontend/backend publiées pour montrer la couche containerisation.", "registry"],
+  ["Roadmap claire", "Jenkins, SonarQube, Trivy, Kubernetes, Terraform et monitoring viendront progressivement.", "release"],
 ];
 
 const profileLinks = [
@@ -657,118 +643,30 @@ export default function HomePage() {
       </RevealSection>
 
       <RevealSection>
-        <section className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-          <div className="space-y-4">
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-rose-300 sm:text-sm sm:tracking-[0.3em]">
-              Stack actuelle
-            </p>
-            <h2 className="text-2xl font-bold text-white sm:text-3xl">
-              Une base MERN/Laravel propre, sécurisée et cloud-ready.
-            </h2>
-            <p className="text-sm leading-7 text-slate-400">
-              L'interface sert de vitrine, mais aussi de socle technique pour gérer des projets, authentifier un utilisateur et connecter une API prête à être livrée.
-            </p>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            {approachItems.map((item, index) => (
-              <div
-                key={item}
-                className="motion-hover-lift motion-fade-up rounded-lg border border-slate-800 bg-slate-900/80 p-4 text-sm leading-7 text-slate-300 hover:border-cyan-300/40 sm:p-5"
-                style={{ "--motion-delay": `${index * 80}ms` }}
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </section>
-      </RevealSection>
-
-      <RevealSection>
-        <section className="grid gap-8 border-t border-slate-800 pt-12 sm:pt-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+        <section className="grid gap-8 border-t border-slate-800 pt-12 sm:pt-16 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
           <div className="space-y-4">
             <p className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-300 sm:text-sm sm:tracking-[0.3em]">
-              Cycle DevOps
+              Dockerisation actuelle
             </p>
             <h2 className="text-2xl font-bold text-white sm:text-3xl">
-              Du code au cloud, chaque étape doit être lisible.
+              La preuve concrète actuelle reste Docker.
             </h2>
+            <p className="text-sm leading-7 text-slate-400">
+              Le reste de la stack DevOps est affiché comme compétence et trajectoire. Pour le moment, le projet démontre surtout la séparation des services et la publication d'images.
+            </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
-            {deliveryItems.map(([title, text], index) => (
-              <div
-                key={title}
-                className="motion-hover-lift motion-fade-up rounded-lg border border-slate-800 bg-slate-900/80 p-4 hover:border-rose-400/40 sm:p-5"
-                style={{ "--motion-delay": `${index * 110}ms` }}
-              >
-                <div className="mb-5 h-1 overflow-hidden rounded-full bg-slate-800">
-                  <div className="motion-pipeline-line h-full w-full bg-slate-700" />
-                </div>
-                <p className="text-lg font-semibold text-white">{title}</p>
-                <p className="mt-3 text-sm leading-7 text-slate-400">{text}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      </RevealSection>
-
-      <RevealSection>
-        <section id="about" className="grid gap-8 border-t border-slate-800 pt-12 sm:pt-16 lg:grid-cols-2 lg:items-start">
-          <div className="space-y-4">
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-rose-300 sm:text-sm sm:tracking-[0.3em]">
-              À propos
-            </p>
-            <h2 className="text-2xl font-bold text-white sm:text-3xl">
-              Un profil orienté pratique, produit et déploiement.
-            </h2>
-          </div>
-
-          <div className="space-y-4 text-slate-400 leading-8">
-            <p>
-              Je développe des applications web complètes avec une attention particulière portée à l'architecture, à l'expérience utilisateur et à la sécurité.
-            </p>
-            <p>
-              Mon objectif est de produire des interfaces élégantes, des API robustes et des solutions prêtes à évoluer sur AWS avec une culture DevOps solide.
-            </p>
-          </div>
-        </section>
-      </RevealSection>
-
-      <RevealSection>
-        <section className="grid gap-8 border-t border-slate-800 pt-12 sm:pt-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-          <div className="space-y-4">
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-300 sm:text-sm sm:tracking-[0.3em]">
-              Parcours
-            </p>
-            <h2 className="text-2xl font-bold text-white sm:text-3xl">
-              Une progression centrée sur la livraison cloud.
-            </h2>
-            <p className="text-sm leading-7 text-slate-400">
-              Cette section donne un repère rapide à un recruteur : formation, projet fil rouge et orientation technique.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {experienceItems.map(([type, title, text], index) => (
+            {dockerHighlights.map(([title, text, icon], index) => (
               <article
                 key={title}
-                className="motion-fade-up rounded-lg border border-slate-800 bg-slate-900/80 p-4 sm:p-5"
+                className="motion-hover-lift motion-fade-up rounded-lg border border-slate-800 bg-slate-900/80 p-4 hover:border-cyan-300/40 sm:p-5"
                 style={{ "--motion-delay": `${index * 90}ms` }}
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-xs font-mono uppercase tracking-[0.2em] text-rose-300">
-                      {type}
-                    </p>
-                    <h3 className="mt-2 text-lg font-semibold text-white">
-                      {title}
-                    </h3>
-                  </div>
-                  <span className="inline-flex w-fit rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-medium text-emerald-300">
-                    En cours
-                  </span>
-                </div>
+                <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+                  <ToolLogo icon={icon} />
+                </span>
+                <h3 className="text-lg font-semibold text-white">{title}</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-400">{text}</p>
               </article>
             ))}
@@ -777,26 +675,31 @@ export default function HomePage() {
       </RevealSection>
 
       <RevealSection>
-        <section id="competences" className="space-y-8">
-          <div className="space-y-3">
+        <section className="grid gap-8 border-t border-slate-800 pt-12 sm:pt-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+          <div className="space-y-4">
             <p className="text-xs font-mono uppercase tracking-[0.2em] text-rose-300 sm:text-sm sm:tracking-[0.3em]">
-              Compétences
+              Parcours
             </p>
             <h2 className="text-2xl font-bold text-white sm:text-3xl">
-              Technologies et domaines que je mobilise.
+              Une progression DevOps étape par étape.
             </h2>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {skillItems.map(([title, text], index) => (
-              <div
+          <div className="grid gap-3">
+            {experienceItems.map(([type, title, text], index) => (
+              <article
                 key={title}
-                className="motion-hover-lift motion-fade-up rounded-lg border border-slate-800 bg-slate-900/80 p-4 hover:border-cyan-300/40 sm:p-5"
+                className="motion-fade-up rounded-lg border border-slate-800 bg-slate-900/80 p-4"
                 style={{ "--motion-delay": `${index * 80}ms` }}
               >
-                <h3 className="text-lg font-semibold text-white">{title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-400">{text}</p>
-              </div>
+                <p className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-300">
+                  {type}
+                </p>
+                <h3 className="mt-2 text-base font-semibold text-white">
+                  {title}
+                </h3>
+                <p className="mt-2 text-sm leading-7 text-slate-400">{text}</p>
+              </article>
             ))}
           </div>
         </section>
