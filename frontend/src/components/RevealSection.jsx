@@ -15,7 +15,7 @@ export default function RevealSection({ children, className = "" }) {
           observer.unobserve(entry.target);
         }
       },
-      { threshold: 0.15 },
+      { rootMargin: "0px 0px 12% 0px", threshold: 0.05 },
     );
 
     observer.observe(node);
@@ -29,7 +29,7 @@ export default function RevealSection({ children, className = "" }) {
       className={`${className} transition-all duration-700 ease-out ${
         visible
           ? "translate-y-0 opacity-100"
-          : "translate-y-6 opacity-0"
+          : "translate-y-3 opacity-0 sm:translate-y-6"
       }`}
     >
       {children}

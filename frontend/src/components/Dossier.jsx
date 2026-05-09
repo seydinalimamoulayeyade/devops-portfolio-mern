@@ -143,15 +143,15 @@ export default function Dossier() {
   return (
     <section className="space-y-8">
       <div className="glass-panel motion-fade-up overflow-hidden rounded-lg">
-        <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+        <div className="grid gap-5 p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
           <div className="max-w-2xl space-y-4">
-            <p className="text-sm font-mono uppercase tracking-[0.3em] text-cyan-300">
+            <p className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-300 sm:text-sm sm:tracking-[0.3em]">
               Catalogue technique
             </p>
-            <h1 className="text-balance text-3xl font-bold text-white sm:text-4xl">
+            <h1 className="text-balance text-2xl font-bold leading-tight text-white sm:text-4xl">
               Projets MERN/Laravel pensés pour AWS et la livraison continue.
             </h1>
-            <p className="leading-7 text-slate-400">
+            <p className="text-sm leading-7 text-slate-400 sm:text-base">
               Retrouvez les réalisations, recherchez un projet et gérez les livrables depuis une interface React connectée à une API sécurisée, prête à être conteneurisée et monitorée.
             </p>
             {isAuthenticated ? (
@@ -162,15 +162,15 @@ export default function Dossier() {
             ) : null}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-cyan-300/20 bg-cyan-300/10 p-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="rounded-lg border border-cyan-300/20 bg-cyan-300/10 p-3 sm:p-4">
               <p className="text-2xl font-bold text-white">{projects.length}</p>
               <p className="mt-1 text-xs text-cyan-200">Projets</p>
             </div>
             {dashboardStats.map(([title, label]) => (
               <div
                 key={title}
-                className="rounded-lg border border-slate-800 bg-slate-950/70 p-4"
+                className="rounded-lg border border-slate-800 bg-slate-950/70 p-3 sm:p-4"
               >
                 <p className="text-sm font-semibold text-white">{title}</p>
                 <p className="mt-1 text-xs text-slate-400">{label}</p>
@@ -179,7 +179,7 @@ export default function Dossier() {
           </div>
         </div>
 
-        <div className="border-t border-slate-800 bg-slate-950/45 p-5">
+        <div className="border-t border-slate-800 bg-slate-950/45 p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <label htmlFor="search-project" className="sr-only">
               Rechercher un projet
@@ -238,7 +238,7 @@ export default function Dossier() {
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col gap-3 border-b border-slate-800 pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <p className="text-sm text-slate-400">
           {loading ? "Chargement..." : `${filteredProjects.length} projet(s) trouvé(s)`}
         </p>
@@ -261,7 +261,7 @@ export default function Dossier() {
           ))}
         </div>
       ) : filteredProjects.length === 0 ? (
-        <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-10 text-center">
+        <div className="rounded-lg border border-slate-800 bg-slate-900/80 p-6 text-center sm:p-10">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-slate-700 text-lg font-semibold text-slate-500">
             0
           </div>

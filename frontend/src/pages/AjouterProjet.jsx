@@ -134,10 +134,10 @@ export default function AjouterProjet() {
   return (
     <section className="mx-auto max-w-5xl space-y-6">
       <div className="motion-fade-up">
-        <p className="text-sm font-mono uppercase tracking-[0.3em] text-rose-300">
+        <p className="text-xs font-mono uppercase tracking-[0.2em] text-rose-300 sm:text-sm sm:tracking-[0.3em]">
           {isEditing ? "Édition" : "Nouveau projet"}
         </p>
-        <h1 className="mt-2 text-balance text-3xl font-bold text-white">
+        <h1 className="mt-2 text-balance text-2xl font-bold leading-tight text-white sm:text-3xl">
           {isEditing ? "Modifier un projet" : "Ajouter un projet AWS-ready"}
         </h1>
         <p className="mt-2 max-w-2xl text-slate-400">
@@ -150,7 +150,7 @@ export default function AjouterProjet() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <form
           onSubmit={handleSubmit}
-          className="glass-panel motion-fade-up space-y-5 rounded-lg p-6"
+          className="glass-panel motion-fade-up space-y-5 rounded-lg p-4 sm:p-6"
           style={{ "--motion-delay": "120ms" }}
         >
           <div>
@@ -229,7 +229,7 @@ export default function AjouterProjet() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex rounded-lg bg-rose-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-600 disabled:opacity-50"
+              className="inline-flex w-full justify-center rounded-lg bg-rose-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-600 disabled:opacity-50 sm:w-auto"
             >
               {saving
                 ? "Enregistrement..."
@@ -241,7 +241,7 @@ export default function AjouterProjet() {
             <button
               type="button"
               onClick={() => navigate("/projets")}
-              className="inline-flex rounded-lg border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
+              className="inline-flex w-full justify-center rounded-lg border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white sm:w-auto"
             >
               Annuler
             </button>

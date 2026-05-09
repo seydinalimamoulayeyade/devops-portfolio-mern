@@ -505,9 +505,9 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="space-y-10 pb-10 sm:space-y-20 sm:pb-12">
+    <div className="space-y-8 pb-10 sm:space-y-16 sm:pb-12 lg:space-y-20">
       <RevealSection>
-        <section className="relative isolate overflow-hidden rounded-lg border border-slate-800 px-4 py-10 shadow-2xl shadow-slate-950/40 sm:px-8 sm:py-16 lg:min-h-[520px] lg:px-10">
+        <section className="relative isolate overflow-hidden rounded-lg border border-slate-800 px-4 py-8 shadow-2xl shadow-slate-950/40 sm:px-8 sm:py-16 lg:min-h-[520px] lg:px-10">
           <div
             className="motion-hero-bg absolute inset-0 -z-20 bg-cover bg-center"
             style={{ backgroundImage: "url('/images/dashboard-monitoring.jpg')" }}
@@ -516,19 +516,19 @@ export default function HomePage() {
           <div className="absolute inset-0 -z-10 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-center">
-            <div className="max-w-3xl space-y-6 sm:space-y-8">
-              <div className="space-y-4 sm:space-y-5">
+            <div className="max-w-3xl space-y-5 sm:space-y-8">
+              <div className="space-y-3 sm:space-y-5">
                 <p className="motion-fade-up text-xs font-mono uppercase tracking-[0.2em] text-cyan-300 sm:text-sm sm:tracking-[0.3em]">
                   Cloud / DevOps / Fullstack
                 </p>
                 <h1
-                  className="motion-fade-up max-w-3xl text-[1.9rem] font-bold leading-[1.08] text-white sm:text-4xl sm:leading-tight lg:text-5xl"
+                  className="motion-fade-up max-w-3xl text-[1.65rem] font-bold leading-[1.12] text-white sm:text-4xl sm:leading-tight lg:text-5xl"
                   style={{ "--motion-delay": "90ms" }}
                 >
                   Je conçois, automatise et déploie des applications prêtes pour le cloud.
                 </h1>
                 <p
-                  className="motion-fade-up max-w-2xl text-sm leading-7 text-slate-300 sm:text-lg sm:leading-8"
+                  className="motion-fade-up max-w-2xl text-sm leading-6 text-slate-300 sm:text-lg sm:leading-8"
                   style={{ "--motion-delay": "180ms" }}
                 >
                   Développeur DevOps orienté AWS, je consolide aujourd'hui une base MERN dockerisée, puis j'intègre progressivement Jenkins, Kubernetes, Terraform et les outils de qualité.
@@ -572,7 +572,7 @@ export default function HomePage() {
                 ))}
               </div>
 
-              <div className="grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3 sm:gap-4 sm:pt-6">
+              <div className="grid gap-3 border-t border-white/10 pt-4 sm:grid-cols-3 sm:gap-4 sm:pt-6">
                 {stackItems.map(([title, text], index) => (
                   <div
                     key={title}
@@ -593,12 +593,12 @@ export default function HomePage() {
 
       <RevealSection>
         <section className="glass-panel rounded-lg p-4 sm:p-6">
-          <div className="flex flex-col gap-4 border-b border-slate-800 pb-6 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-4 border-b border-slate-800 pb-5 sm:pb-6 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl space-y-3">
               <p className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-300 sm:text-sm sm:tracking-[0.3em]">
                 Outils Cloud & DevOps
               </p>
-              <h2 className="text-balance text-2xl font-bold text-white sm:text-3xl">
+              <h2 className="text-balance text-xl font-bold leading-tight text-white sm:text-3xl">
                 Une boîte à outils centrée DevOps, AWS et développement web.
               </h2>
               <p className="text-sm leading-7 text-slate-400">
@@ -611,14 +611,14 @@ export default function HomePage() {
             </span>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
             {toolGroups.map(({ title, tools }, index) => (
               <div
                 key={title}
-                className="motion-hover-lift motion-fade-up rounded-lg border border-slate-800 bg-slate-950/55 p-4 hover:border-cyan-300/35 sm:p-5"
+                className="motion-hover-lift motion-fade-up rounded-lg border border-slate-800 bg-slate-950/55 p-3.5 hover:border-cyan-300/35 sm:p-5"
                 style={{ "--motion-delay": `${index * 70}ms` }}
               >
-                <p className="text-lg font-semibold text-white">{title}</p>
+                <p className="text-base font-semibold text-white sm:text-lg">{title}</p>
                 <div className="mt-4 grid grid-cols-4 gap-2 sm:mt-5 sm:gap-3">
                   {tools.map(([name, icon]) => (
                     <span
@@ -643,12 +643,12 @@ export default function HomePage() {
       </RevealSection>
 
       <RevealSection>
-        <section className="grid gap-8 border-t border-slate-800 pt-12 sm:pt-16 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+        <section className="grid gap-6 border-t border-slate-800 pt-10 sm:gap-8 sm:pt-16 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
           <div className="space-y-4">
             <p className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-300 sm:text-sm sm:tracking-[0.3em]">
               Dockerisation actuelle
             </p>
-            <h2 className="text-2xl font-bold text-white sm:text-3xl">
+            <h2 className="text-xl font-bold leading-tight text-white sm:text-3xl">
               La preuve concrète actuelle reste Docker.
             </h2>
             <p className="text-sm leading-7 text-slate-400">
@@ -656,7 +656,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
             {dockerHighlights.map(([title, text, icon], index) => (
               <article
                 key={title}
@@ -675,12 +675,12 @@ export default function HomePage() {
       </RevealSection>
 
       <RevealSection>
-        <section className="grid gap-8 border-t border-slate-800 pt-12 sm:pt-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+        <section className="grid gap-6 border-t border-slate-800 pt-10 sm:gap-8 sm:pt-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div className="space-y-4">
             <p className="text-xs font-mono uppercase tracking-[0.2em] text-rose-300 sm:text-sm sm:tracking-[0.3em]">
               Parcours
             </p>
-            <h2 className="text-2xl font-bold text-white sm:text-3xl">
+            <h2 className="text-xl font-bold leading-tight text-white sm:text-3xl">
               Une progression DevOps étape par étape.
             </h2>
           </div>
@@ -706,13 +706,13 @@ export default function HomePage() {
       </RevealSection>
 
       <RevealSection>
-        <section className="space-y-8 border-t border-slate-800 pt-12 sm:pt-16">
+        <section className="space-y-6 border-t border-slate-800 pt-10 sm:space-y-8 sm:pt-16">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="space-y-3">
               <p className="text-xs font-mono uppercase tracking-[0.2em] text-rose-300 sm:text-sm sm:tracking-[0.3em]">
                 Portfolio
               </p>
-              <h2 className="text-2xl font-bold text-white sm:text-3xl">Projets en vedette</h2>
+              <h2 className="text-xl font-bold text-white sm:text-3xl">Projets en vedette</h2>
               <p className="max-w-2xl text-sm leading-7 text-slate-400">
                 Un aperçu de mes réalisations récentes, construites autour du MERN, de Laravel, de Tailwind, du DevOps et d'AWS.
               </p>
@@ -752,13 +752,13 @@ export default function HomePage() {
       </RevealSection>
 
       <RevealSection>
-        <section id="contact" className="border-t border-slate-800 pt-12 sm:pt-16">
+        <section id="contact" className="border-t border-slate-800 pt-10 sm:pt-16">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div className="space-y-4">
               <p className="text-xs font-mono uppercase tracking-[0.2em] text-rose-300 sm:text-sm sm:tracking-[0.3em]">
                 Contact
               </p>
-              <h2 className="text-2xl font-bold text-white sm:text-3xl">
+              <h2 className="text-xl font-bold leading-tight text-white sm:text-3xl">
                 Besoin d'un développeur Cloud & DevOps pour un projet ?
               </h2>
               <p className="max-w-2xl text-sm leading-8 text-slate-400">

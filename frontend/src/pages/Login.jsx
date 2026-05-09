@@ -48,9 +48,9 @@ export default function Login() {
   }
 
   return (
-    <section className="motion-fade-up mx-auto mt-10 max-w-5xl overflow-hidden rounded-lg border border-slate-800 bg-slate-900/85 shadow-2xl shadow-slate-950/30">
+    <section className="motion-fade-up mx-auto max-w-5xl overflow-hidden rounded-lg border border-slate-800 bg-slate-900/85 shadow-2xl shadow-slate-950/30 sm:mt-10">
       <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="relative overflow-hidden border-b border-slate-800 bg-slate-950 p-8 lg:border-b-0 lg:border-r">
+        <div className="relative overflow-hidden border-b border-slate-800 bg-slate-950 p-5 sm:p-8 lg:border-b-0 lg:border-r">
           <div
             className="absolute inset-0 opacity-50"
             style={{ backgroundImage: "url('/images/pipeline-cicd.jpg')" }}
@@ -59,10 +59,10 @@ export default function Login() {
 
           <div className="relative space-y-8">
             <div>
-              <p className="text-sm font-mono uppercase tracking-[0.3em] text-cyan-300">
+              <p className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-300 sm:text-sm sm:tracking-[0.3em]">
                 Console admin
               </p>
-              <h1 className="mt-3 text-balance text-3xl font-bold text-white">
+              <h1 className="mt-3 text-balance text-2xl font-bold leading-tight text-white sm:text-3xl">
                 Accès sécurisé aux livrables DevOps.
               </h1>
               <p className="mt-3 text-sm leading-7 text-slate-400">
@@ -97,12 +97,12 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="p-8">
+        <div className="p-5 sm:p-8">
           <div className="mb-6 space-y-2">
-            <p className="text-sm font-mono uppercase tracking-[0.3em] text-rose-300">
+            <p className="text-xs font-mono uppercase tracking-[0.2em] text-rose-300 sm:text-sm sm:tracking-[0.3em]">
               Authentification
             </p>
-            <h2 className="text-3xl font-bold text-white">Connexion</h2>
+            <h2 className="text-2xl font-bold text-white sm:text-3xl">Connexion</h2>
             <p className="text-sm leading-6 text-slate-400">
               Session protégée pour gérer les projets.
             </p>

@@ -29,7 +29,7 @@ export default function ProjectCard({ project, onDelete }) {
         </div>
       </div>
 
-      <div className="space-y-4 p-5">
+      <div className="space-y-4 p-4 sm:p-5">
         <div className="space-y-2">
           <Link
             to={`/projets/${projectId}`}
@@ -54,7 +54,7 @@ export default function ProjectCard({ project, onDelete }) {
           ))}
         </div>
 
-        <div className="flex items-center justify-between gap-3 pt-2">
+        <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
           <Link
             to={`/projets/${projectId}`}
             className="text-sm font-medium text-rose-300 transition-colors hover:text-rose-200"
@@ -63,10 +63,10 @@ export default function ProjectCard({ project, onDelete }) {
           </Link>
 
           {isAuthenticated ? (
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex">
               <Link
                 to={`/modifier/${projectId}`}
-                className="inline-flex items-center rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition-all hover:border-rose-400 hover:text-white"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 transition-all hover:border-rose-400 hover:text-white"
               >
                 Modifier
               </Link>
@@ -74,7 +74,7 @@ export default function ProjectCard({ project, onDelete }) {
               <button
                 type="button"
                 onClick={() => onDelete(project)}
-                className="inline-flex items-center rounded-lg bg-red-500 px-3 py-2 text-sm font-medium text-white transition-all hover:bg-red-600"
+                className="inline-flex items-center justify-center rounded-lg bg-red-500 px-3 py-2 text-sm font-medium text-white transition-all hover:bg-red-600"
               >
                 Supprimer
               </button>
