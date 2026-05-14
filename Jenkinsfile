@@ -11,10 +11,10 @@ pipeline {
     }
 
     environment {
-        DOCKERHUB_USER = "lims4"
+        DOCKERHUB_USER = 'lims4'
         FRONTEND_IMAGE = "${DOCKERHUB_USER}/devops-portfolio-mern-frontend"
         BACKEND_IMAGE  = "${DOCKERHUB_USER}/devops-portfolio-mern-backend"
-        VITE_API_URL   = "http://localhost:5000/api"
+        VITE_API_URL   = 'http://localhost:5000/api'
     }
 
     stages {
@@ -54,7 +54,7 @@ pipeline {
 
         stage('Prepare CI env') {
             steps {
-                echo "Preparation du fichier .env pour Docker Compose..."
+                echo 'Preparation du fichier .env pour Docker Compose...'
                 withCredentials([string(
                     credentialsId: 'jwt-secret',
                     variable: 'JWT_SECRET_VALUE'
@@ -82,14 +82,14 @@ EOF
 
         stage('Build') {
             steps {
-                echo "Build des images Docker..."
+                echo 'Build des images Docker...'
                 sh 'docker compose build'
             }
         }
 
         stage('Test') {
             steps {
-                echo "Demarrage et verification des healthchecks..."
+                echo 'Demarrage et verification des healthchecks...'
                 sh '''
                     set -eu
 
@@ -157,7 +157,7 @@ EOF
 
         stage('Deploy') {
             steps {
-                echo "Deploiement en local..."
+                echo 'Deploiement en local...'
                 withCredentials([string(
                     credentialsId: 'jwt-secret',
                     variable: 'JWT_SECRET_VALUE'
@@ -182,26 +182,49 @@ EOF
     }
 
     post {
-        success {
-            echo "Pipeline reussi - images publiees avec le tag ${env.IMAGE_TAG}"
-        }
-        failure {
-            echo "Pipeline echoue - nettoyage si Docker est disponible..."
-            sh '''
-                if command -v docker >/dev/null 2>&1; then
-                    docker compose --env-file .env down --remove-orphans -v || true
-                    docker rm -f ci-frontend ci-backend ci-mongo 2>/dev/null || true
-                else
-                    echo "Docker indisponible: nettoyage ignore."
-                fi
-            '''
-        }
         always {
             sh '''
                 if command -v docker >/dev/null 2>&1; then
                     docker logout || true
                 else
                     echo "Docker indisponible: logout ignore."
+                fi
+            '''
+            script {
+                try {
+                    emailext(
+                        to: 'seydinalimamoulayeyade@gmail.com',
+                        subject: "[Jenkins] ${currentBuild.currentResult} - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        body: """
+                            <h2>Resultat : ${currentBuild.currentResult}</h2>
+                            <table>
+                                <tr><td><b>Job</b></td><td>${env.JOB_NAME}</td></tr>
+                                <tr><td><b>Build</b></td><td>#${env.BUILD_NUMBER}</td></tr>
+                                <tr><td><b>Branche</b></td><td>${env.GIT_BRANCH ?: 'N/A'}</td></tr>
+                                <tr><td><b>Tag image</b></td><td>${env.IMAGE_TAG ?: 'N/A'}</td></tr>
+                                <tr><td><b>Duree</b></td><td>${currentBuild.durationString}</td></tr>
+                                <tr><td><b>Logs</b></td><td><a href="${env.BUILD_URL}">${env.BUILD_URL}</a></td></tr>
+                            </table>
+                        """,
+                        mimeType: 'text/html',
+                        attachLog: false
+                    )
+                } catch (err) {
+                    echo "Notification email ignoree: ${err.message}"
+                }
+            }
+        }
+        success {
+            echo "Pipeline reussi - image publiee : ${env.IMAGE_TAG}"
+        }
+        failure {
+            echo 'Pipeline echoue - nettoyage en cours...'
+            sh '''
+                if command -v docker >/dev/null 2>&1; then
+                    docker compose --env-file .env down --remove-orphans -v || true
+                    docker rm -f ci-frontend ci-backend ci-mongo 2>/dev/null || true
+                else
+                    echo "Docker indisponible: nettoyage ignore."
                 fi
             '''
         }
