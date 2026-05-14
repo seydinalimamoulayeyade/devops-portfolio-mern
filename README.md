@@ -184,16 +184,38 @@ npm run dev
 ```
 GET    /api/projets          Liste tous les projets
 GET    /api/projets/:id      Détail d'un projet
-POST   /api/projets          Créer un projet (auth requise)
-PUT    /api/projets/:id      Modifier un projet (auth requise)
-DELETE /api/projets/:id      Supprimer un projet (auth requise)
+POST   /api/projets          Créer un projet (admin requis)
+PUT    /api/projets/:id      Modifier un projet (admin requis)
+DELETE /api/projets/:id      Supprimer un projet (admin requis)
 ```
 
 ### Authentification
 
 ```
-POST   /api/auth/register    Créer un compte
+POST   /api/auth/register    Désactivé (403)
 POST   /api/auth/login       Connexion — retourne un token JWT
+```
+
+### Compte administrateur
+
+L'inscription publique est fermée. Le compte admin se crée ou se réinitialise depuis le backend :
+
+```bash
+cd backend
+npm run seed:admin
+```
+
+Avec Docker Compose déjà lancé, utilisez plutôt :
+
+```bash
+docker exec backend npm run seed:admin
+```
+
+Variables optionnelles :
+
+```env
+ADMIN_EMAIL=admin@test.com
+ADMIN_PASSWORD=#admin123
 ```
 
 ### Health Check
