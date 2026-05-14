@@ -93,7 +93,10 @@ EOF
                 sh '''
                     set -eu
 
-                    docker compose up -d
+                    docker compose --env-file .env down --remove-orphans -v || true
+                    docker rm -f ci-frontend ci-backend ci-mongo 2>/dev/null || true
+
+                    docker compose --env-file .env up -d --force-recreate --remove-orphans
 
                     for service in mongo backend frontend; do
                         echo "Attente du service $service..."
@@ -186,7 +189,8 @@ EOF
             echo "Pipeline echoue - nettoyage si Docker est disponible..."
             sh '''
                 if command -v docker >/dev/null 2>&1; then
-                    docker compose down || true
+                    docker compose --env-file .env down --remove-orphans -v || true
+                    docker rm -f ci-frontend ci-backend ci-mongo 2>/dev/null || true
                 else
                     echo "Docker indisponible: nettoyage ignore."
                 fi
