@@ -83,7 +83,7 @@ EOF
         stage('Build') {
             steps {
                 echo 'Build des images Docker...'
-                sh 'docker compose build'
+                sh 'docker compose --env-file .env build'
             }
         }
 
@@ -100,11 +100,11 @@ EOF
 
                     for service in mongo backend frontend; do
                         echo "Attente du service $service..."
-                        container_id="$(docker compose ps -q "$service")"
+                        container_id="$(docker compose --env-file .env ps -q "$service")"
 
                         if [ -z "$container_id" ]; then
                             echo "ERREUR: conteneur introuvable pour $service"
-                            docker compose ps
+                            docker compose --env-file .env ps
                             exit 1
                         fi
 
@@ -118,7 +118,7 @@ EOF
 
                             if [ "$attempt" -eq 30 ]; then
                                 echo "ERREUR: $service n'est pas healthy apres attente."
-                                docker compose logs "$service"
+                                docker compose --env-file .env logs "$service"
                                 exit 1
                             fi
 
@@ -126,7 +126,7 @@ EOF
                         done
                     done
 
-                    docker compose ps
+                    docker compose --env-file .env ps
                 '''
             }
         }
@@ -192,15 +192,15 @@ EOF
             '''
             emailext(
                 to: 'seydinalimamoulayeyade@gmail.com',
-                subject: "[Jenkins] ${currentBuild.result} — ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "[Jenkins] ${currentBuild.currentResult} - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
-                    <h2>Résultat : ${currentBuild.result}</h2>
+                    <h2>Resultat : ${currentBuild.currentResult}</h2>
                     <table>
                         <tr><td><b>Job</b></td><td>${env.JOB_NAME}</td></tr>
                         <tr><td><b>Build</b></td><td>#${env.BUILD_NUMBER}</td></tr>
                         <tr><td><b>Branche</b></td><td>${env.GIT_BRANCH ?: 'N/A'}</td></tr>
                         <tr><td><b>Tag image</b></td><td>${env.IMAGE_TAG ?: 'N/A'}</td></tr>
-                        <tr><td><b>Durée</b></td><td>${currentBuild.durationString}</td></tr>
+                        <tr><td><b>Duree</b></td><td>${currentBuild.durationString}</td></tr>
                         <tr><td><b>Logs</b></td><td><a href="${env.BUILD_URL}">${env.BUILD_URL}</a></td></tr>
                     </table>
                 """,
@@ -209,10 +209,10 @@ EOF
             )
         }
         success {
-            echo "✅ Pipeline reussi — image publiee : ${env.IMAGE_TAG}"
+            echo "Pipeline reussi - image publiee : ${env.IMAGE_TAG}"
         }
         failure {
-            echo '❌ Pipeline echoue — nettoyage en cours...'
+            echo 'Pipeline echoue - nettoyage en cours...'
             sh '''
                 if command -v docker >/dev/null 2>&1; then
                     docker compose --env-file .env down --remove-orphans -v || true
@@ -221,6 +221,9 @@ EOF
                     echo "Docker indisponible: nettoyage ignore."
                 fi
             '''
+        }
+        cleanup {
+            sh 'rm -f .env .env.deploy'
         }
     }
 }
