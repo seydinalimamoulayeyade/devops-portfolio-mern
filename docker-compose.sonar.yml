@@ -1,0 +1,69 @@
+networks:
+  sonar-network:
+    driver: bridge
+
+volumes:
+  sonar_data:       # données projets SonarQube
+  sonar_extensions: # plugins installés
+  sonar_logs:       # logs SonarQube
+  sonar_db:         # base PostgreSQL dédiée
+
+services:
+
+  # ── Base de données SonarQube (PostgreSQL recommandé) ──────────────
+  sonar-db:
+    image: postgres:15-alpine
+    container_name: sonar-db
+    restart: unless-stopped
+    networks:
+      - sonar-network
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonarqube
+    volumes:
+      - sonar_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar -d sonarqube"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── SonarQube Community Edition ────────────────────────────────────
+  sonarqube:
+    image: sonarqube:10-community
+    container_name: sonarqube
+    restart: unless-stopped
+    networks:
+      - sonar-network
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonar-db:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      # Désactive la télémétrie
+      SONAR_TELEMETRY_ENABLE: "false"
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_extensions:/opt/sonarqube/extensions
+      - sonar_logs:/opt/sonarqube/logs
+    depends_on:
+      sonar-db:
+        condition: service_healthy
+    ulimits:
+      # Requis par Elasticsearch embarqué dans SonarQube
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=1 --spider http://localhost:9000/api/system/status || exit 1"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s  # SonarQube prend ~90s au premier démarrage
