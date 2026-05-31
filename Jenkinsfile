@@ -10,14 +10,18 @@ pipeline {
     }
 
     environment {
-        DOCKERHUB_USER = 'lims4'
-        FRONTEND_IMAGE = "${DOCKERHUB_USER}/devops-portfolio-mern-frontend"
-        BACKEND_IMAGE = "${DOCKERHUB_USER}/devops-portfolio-mern-backend"
-        VITE_API_URL = 'http://localhost:5000/api'
-        COMPOSE_ENV = '.env.ci'
+        DOCKERHUB_USER        = 'lims4'
+        FRONTEND_IMAGE        = "${DOCKERHUB_USER}/devops-portfolio-mern-frontend"
+        BACKEND_IMAGE         = "${DOCKERHUB_USER}/devops-portfolio-mern-backend"
+        VITE_API_URL          = 'http://localhost:5000/api'
+        COMPOSE_ENV           = '.env.ci'
+        // URL de ton instance SonarQube (adapter selon ton déploiement)
+        SONAR_HOST_URL        = 'http://sonarqube:9000'
+        SONAR_PROJECT_KEY     = 'devops-portfolio-mern'
     }
 
     stages {
+        // ── 1. CHECKOUT ─────────────────────────────────────────────
         stage('Checkout') {
             steps {
                 checkout scm
@@ -33,6 +37,43 @@ pipeline {
             }
         }
 
+        // ── 2. ANALYSE SONARQUBE ─────────────────────────────────────
+        // Ce stage s'exécute AVANT le build Docker (fail fast sur la qualité)
+        stage('SonarQube Analysis') {
+            steps {
+                // 'SonarQube' = nom du serveur configuré dans
+                // Jenkins > Manage Jenkins > Configure System > SonarQube servers
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        set -eu
+
+                        # sonar-scanner doit être installé sur l'agent Jenkins
+                        # ou disponible via le tool SonarQube Scanner configuré dans Jenkins
+                        sonar-scanner \
+                            -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
+                            -Dsonar.host.url="${SONAR_HOST_URL}" \
+                            -Dsonar.sources=backend/src,backend/server.js,frontend/src \
+                            -Dsonar.exclusions="**/node_modules/**,**/dist/**,**/coverage/**,**/uploads/**" \
+                            -Dsonar.sourceEncoding=UTF-8
+                    '''
+                }
+            }
+        }
+
+        // ── 3. QUALITY GATE ──────────────────────────────────────────
+        // Attend le résultat de l'analyse (webhook SonarQube → Jenkins)
+        // Le pipeline est BLOQUÉ si le Quality Gate échoue
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    // abortPipeline: true = le build échoue si QG = FAILED
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        // ── 4. BUILD & TEST ──────────────────────────────────────────
+        // Inchangé — ne s'exécute que si le Quality Gate est PASSED
         stage('Build and test') {
             steps {
                 withCredentials([string(
@@ -73,6 +114,7 @@ EOF
             }
         }
 
+        // ── 5. PUSH IMAGES ───────────────────────────────────────────
         stage('Push images') {
             steps {
                 withCredentials([usernamePassword(
@@ -116,7 +158,7 @@ EOF
             echo "Pipeline reussi - images publiees avec le tag ${env.IMAGE_TAG}"
         }
         failure {
-            echo 'Pipeline echoue - consultez les logs Jenkins.'
+            echo 'Pipeline echoue - consultez les logs Jenkins ou le Quality Gate SonarQube.'
         }
     }
 }
