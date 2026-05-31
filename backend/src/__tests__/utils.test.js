@@ -15,13 +15,12 @@ function normalizeTechnologies(value) {
   }
   const rawValue = String(value).trim();
   if (!rawValue) return [];
-  try {
+  // APRÈS
+  if (rawValue.startsWith("[")) {
     const parsed = JSON.parse(rawValue);
     if (Array.isArray(parsed)) {
       return parsed.map((item) => String(item).trim()).filter(Boolean);
     }
-  } catch (_e) {
-    // JSON.parse intentionnellement ignoré — on tombe sur le split CSV
   }
   return rawValue
     .split(",")
