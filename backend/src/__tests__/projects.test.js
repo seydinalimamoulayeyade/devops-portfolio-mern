@@ -60,12 +60,11 @@ let mongod;
 let app;
 
 beforeAll(async () => {
-  // Démarre MongoDB en mémoire
   mongod = await MongoMemoryServer.create();
   const uri = mongod.getUri();
   await mongoose.connect(uri);
   app = buildApp();
-});
+}, 60000);
 
 afterEach(async () => {
   // Nettoie les collections entre chaque test pour l'isolation

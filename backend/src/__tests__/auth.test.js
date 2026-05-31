@@ -26,7 +26,7 @@ beforeAll(async () => {
   mongod = await MongoMemoryServer.create();
   await mongoose.connect(mongod.getUri());
   app = buildApp();
-});
+}, 60000); // 60s — téléchargement du binaire MongoDB au premier lancement
 
 afterEach(async () => {
   const collections = mongoose.connection.collections;
