@@ -34,9 +34,12 @@ pipeline {
             }
         }
 
-        // ── 2. TESTS BACKEND ─────────────────────────────────────────
-        // Jest + coverage LCOV — résultat transmis à SonarQube
+        // ── 2. BACKEND TESTS ─────────────────────────────────────────
+        // Node.js injecté via Jenkins Tools — npm disponible dans ce stage
         stage('Backend Tests') {
+            tools {
+                nodejs 'NodeJS'
+            }
             steps {
                 sh '''
                     set -eu
@@ -47,7 +50,6 @@ pipeline {
             }
             post {
                 always {
-                    // Publie le rapport Jest dans Jenkins
                     junit allowEmptyResults: true,
                           testResults: 'backend/coverage/junit.xml'
                 }
