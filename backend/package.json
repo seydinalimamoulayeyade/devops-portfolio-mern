@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed:admin": "node scripts/seedAdmin.js"
+    "seed:admin": "node scripts/seedAdmin.js",
+    "test": "jest --coverage --coverageDirectory=coverage --forceExit",
+    "test:ci": "jest --coverage --coverageDirectory=coverage --forceExit --ci"
   },
   "keywords": [
     "node",
@@ -27,6 +29,26 @@
     "multer": "^2.0.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0",
+    "mongodb-memory-server": "^10.1.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "coverageReporters": [
+      "lcov",
+      "text",
+      "clover"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "server.js",
+      "!src/utils/.gitkeep",
+      "!scripts/**"
+    ]
   }
 }

@@ -19,7 +19,7 @@ pipeline {
     }
 
     stages {
-
+        // ── 1. CHECKOUT ─────────────────────────────────────────────
         stage('Checkout') {
             steps {
                 checkout scm
@@ -34,6 +34,28 @@ pipeline {
             }
         }
 
+        // ── 2. TESTS BACKEND ─────────────────────────────────────────
+        // Jest + coverage LCOV — résultat transmis à SonarQube
+        stage('Backend Tests') {
+            steps {
+                sh '''
+                    set -eu
+                    cd backend
+                    npm ci
+                    npm run test:ci
+                '''
+            }
+            post {
+                always {
+                    // Publie le rapport Jest dans Jenkins
+                    junit allowEmptyResults: true,
+                          testResults: 'backend/coverage/junit.xml'
+                }
+            }
+        }
+
+        // ── 3. SONARQUBE ANALYSIS ─────────────────────────────────────
+        // withSonarQubeEnv injecte SONAR_HOST_URL et le token automatiquement
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
@@ -45,13 +67,16 @@ pipeline {
                                 -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
                                 -Dsonar.sources=backend/src,backend/server.js,frontend/src \
                                 -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**,**/uploads/** \
-                                -Dsonar.sourceEncoding=UTF-8
+                                -Dsonar.sourceEncoding=UTF-8 \
+                                -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info \
+                                -Dsonar.test.inclusions=backend/src/__tests__/**
                         """
                     }
                 }
             }
         }
 
+        // ── 4. QUALITY GATE ──────────────────────────────────────────
         stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
@@ -60,6 +85,7 @@ pipeline {
             }
         }
 
+        // ── 5. BUILD & TEST ──────────────────────────────────────────
         stage('Build and test') {
             steps {
                 withCredentials([string(
@@ -69,7 +95,7 @@ pipeline {
                     sh """
                         set -eu
 
-                        cat > \"\${COMPOSE_ENV}\" <<EOF
+                        cat > "\${COMPOSE_ENV}" <<EOF
 COMPOSE_PROJECT_NAME=devops-portfolio-mern-ci
 JWT_SECRET=\${JWT_SECRET_VALUE}
 VITE_API_URL=\${VITE_API_URL}
@@ -81,25 +107,26 @@ BACKEND_PORT=5001
 FRONTEND_PORT=8081
 EOF
 
-                        chmod 600 \"\${COMPOSE_ENV}\"
+                        chmod 600 "\${COMPOSE_ENV}"
 
                         docker --version
                         docker compose version
 
-                        docker compose --env-file \"\${COMPOSE_ENV}\" down --remove-orphans -v || true
+                        docker compose --env-file "\${COMPOSE_ENV}" down --remove-orphans -v || true
                         docker rm -f ci-frontend ci-backend ci-mongo 2>/dev/null || true
 
-                        if ! docker compose --env-file \"\${COMPOSE_ENV}\" up --build --wait --wait-timeout 180 --force-recreate --remove-orphans; then
-                            docker compose --env-file \"\${COMPOSE_ENV}\" logs
+                        if ! docker compose --env-file "\${COMPOSE_ENV}" up --build --wait --wait-timeout 180 --force-recreate --remove-orphans; then
+                            docker compose --env-file "\${COMPOSE_ENV}" logs
                             exit 1
                         fi
 
-                        docker compose --env-file \"\${COMPOSE_ENV}\" ps
+                        docker compose --env-file "\${COMPOSE_ENV}" ps
                     """
                 }
             }
         }
 
+        // ── 6. PUSH IMAGES ───────────────────────────────────────────
         stage('Push images') {
             steps {
                 withCredentials([usernamePassword(
@@ -110,15 +137,15 @@ EOF
                     sh """
                         set -eu
 
-                        echo \"\${DOCKER_PASS}\" | docker login -u \"\${DOCKER_USER}\" --password-stdin
+                        echo "\${DOCKER_PASS}" | docker login -u "\${DOCKER_USER}" --password-stdin
 
-                        docker tag \"\${FRONTEND_IMAGE}:latest\" \"\${FRONTEND_IMAGE}:\${IMAGE_TAG}\"
-                        docker tag \"\${BACKEND_IMAGE}:latest\" \"\${BACKEND_IMAGE}:\${IMAGE_TAG}\"
+                        docker tag "\${FRONTEND_IMAGE}:latest" "\${FRONTEND_IMAGE}:\${IMAGE_TAG}"
+                        docker tag "\${BACKEND_IMAGE}:latest" "\${BACKEND_IMAGE}:\${IMAGE_TAG}"
 
-                        docker push \"\${FRONTEND_IMAGE}:latest\"
-                        docker push \"\${BACKEND_IMAGE}:latest\"
-                        docker push \"\${FRONTEND_IMAGE}:\${IMAGE_TAG}\"
-                        docker push \"\${BACKEND_IMAGE}:\${IMAGE_TAG}\"
+                        docker push "\${FRONTEND_IMAGE}:latest"
+                        docker push "\${BACKEND_IMAGE}:latest"
+                        docker push "\${FRONTEND_IMAGE}:\${IMAGE_TAG}"
+                        docker push "\${BACKEND_IMAGE}:\${IMAGE_TAG}"
                     """
                 }
             }
@@ -130,11 +157,11 @@ EOF
             sh """
                 if command -v docker >/dev/null 2>&1; then
                     docker logout || true
-                    if [ -f \"\${COMPOSE_ENV}\" ]; then
-                        docker compose --env-file \"\${COMPOSE_ENV}\" down --remove-orphans -v || true
+                    if [ -f "\${COMPOSE_ENV}" ]; then
+                        docker compose --env-file "\${COMPOSE_ENV}" down --remove-orphans -v || true
                     fi
                 fi
-                rm -f \"\${COMPOSE_ENV}\"
+                rm -f "\${COMPOSE_ENV}"
             """
         }
         success {
