@@ -47,7 +47,9 @@
     "collectCoverageFrom": [
       "src/**/*.js",
       "server.js",
-      "!src/utils/.gitkeep",
+      "!src/__tests__/**",
+      "!src/config/**",
+      "!src/middleware/upload.js",
       "!scripts/**"
     ]
   }
