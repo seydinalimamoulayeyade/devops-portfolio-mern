@@ -38,3 +38,8 @@ backend/uploads/*
 *.njsproj
 *.sln
 *.sw?
+
+coverage/
+**/coverage/
+.scannerwork/       ← dossier temporaire créé par sonar-scanner
+*.lcov

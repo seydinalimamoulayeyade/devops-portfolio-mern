@@ -11,3 +11,8 @@ docker-compose.yml
 backend/node_modules
 backend/uploads/*
 !backend/uploads/.gitkeep
+**/coverage/
+**/__tests__/
+**/*.test.js
+.scannerwork/
+sonar-project.properties
