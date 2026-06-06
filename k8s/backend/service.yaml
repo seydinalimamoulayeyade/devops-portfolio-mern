@@ -1,0 +1,24 @@
+# k8s/backend/service.yaml
+#
+# Service Backend — expose l'API Express aux autres Pods
+#
+# Type ClusterIP — le backend est accessible uniquement dans le cluster.
+# Le frontend contacte le backend via "backend-service:5000" (DNS interne).
+# L'accès externe passe par le frontend (nginx), pas directement par le backend.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: devops-portfolio
+  labels:
+    app: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5000
+      targetPort: 5000

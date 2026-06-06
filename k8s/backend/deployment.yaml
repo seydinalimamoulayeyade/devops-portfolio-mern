@@ -1,0 +1,87 @@
+# k8s/backend/deployment.yaml
+#
+# Deployment Backend Express
+#
+# Le backend consomme :
+#   - Le Secret mern-secret  → JWT_SECRET, MONGO_URI
+#   - Le ConfigMap mern-config → NODE_ENV, PORT
+#
+# Il dépend de mongo-service pour la connexion MongoDB.
+# K8s ne garantit pas l'ordre de démarrage — le backend peut démarrer
+# avant MongoDB. Le readinessProbe gère ce cas : le Pod backend ne reçoit
+# pas de trafic tant qu'il ne répond pas sur /api/health.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: devops-portfolio
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          # Image publiée sur Docker Hub par le pipeline Jenkins
+          image: lims4/devops-portfolio-mern-backend:latest
+          # Always = K8s re-télécharge l'image à chaque redémarrage du Pod
+          # Utile pour récupérer automatiquement les nouvelles versions
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            # ── Depuis le Secret ─────────────────────────────────────
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mern-secret
+                  key: JWT_SECRET
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mern-secret
+                  key: MONGO_URI
+            # ── Depuis le ConfigMap ──────────────────────────────────
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: mern-config
+                  key: NODE_ENV
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: mern-config
+                  key: PORT
+          # readinessProbe — le Pod reçoit du trafic seulement si /api/health répond 200
+          # Cela résout le problème de démarrage avant MongoDB
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
