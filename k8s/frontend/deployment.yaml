@@ -1,0 +1,59 @@
+# k8s/frontend/deployment.yaml
+#
+# Deployment Frontend React (servi par nginx)
+#
+# Le frontend est une application statique compilée par Vite.
+# nginx sert les fichiers build et proxifie les appels /api vers le backend.
+#
+# Note importante sur VITE_API_URL :
+# Les variables Vite (VITE_*) sont injectées AU MOMENT DU BUILD, pas au runtime.
+# L'image Docker Hub contient déjà le build avec l'URL d'API intégrée.
+# Pour un vrai environnement multi-stage, on utiliserait nginx pour proxifier
+# /api → backend-service, ce qui rend l'URL indépendante de l'environnement.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: devops-portfolio
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: lims4/devops-portfolio-mern-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"

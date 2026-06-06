@@ -1,0 +1,33 @@
+# k8s/frontend/service.yaml
+#
+# Service Frontend — exposé à l'extérieur via NodePort
+#
+# Contrairement à ClusterIP (interne uniquement), NodePort expose le service
+# sur un port du Node (ta machine) accessible depuis le navigateur.
+#
+# Accès : http://localhost:30080
+#
+# Plage NodePort : 30000-32767 (imposée par K8s)
+# On choisit 30080 pour être proche du port 80 conventionnel.
+#
+# En production cloud, on utiliserait :
+#   - LoadBalancer (AWS ELB, GCP LB) — IP publique automatique
+#   - Ingress (nginx ingress controller) — routing HTTP/HTTPS avancé
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: devops-portfolio
+  labels:
+    app: frontend
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80          # port du Service dans le cluster
+      targetPort: 80    # port du conteneur nginx
+      nodePort: 30080   # port accessible depuis ta machine → http://localhost:30080
