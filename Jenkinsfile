@@ -16,9 +16,11 @@ pipeline {
         VITE_API_URL          = 'http://localhost:5000/api'
         COMPOSE_ENV           = '.env.ci'
         SONAR_PROJECT_KEY     = 'devops-portfolio-mern'
+        K8S_NAMESPACE         = 'devops-portfolio'
     }
 
     stages {
+
         // ── 1. CHECKOUT ─────────────────────────────────────────────
         stage('Checkout') {
             steps {
@@ -35,7 +37,6 @@ pipeline {
         }
 
         // ── 2. BACKEND TESTS ─────────────────────────────────────────
-        // Node.js injecté via Jenkins Tools — npm disponible dans ce stage
         stage('Backend Tests') {
             tools {
                 nodejs 'NodeJS'
@@ -57,7 +58,6 @@ pipeline {
         }
 
         // ── 3. SONARQUBE ANALYSIS ─────────────────────────────────────
-        // withSonarQubeEnv injecte SONAR_HOST_URL et le token automatiquement
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
@@ -152,6 +152,39 @@ EOF
                 }
             }
         }
+
+        // ── 7. DEPLOY TO KUBERNETES ───────────────────────────────────
+        // Redémarre les Deployments pour forcer le pull de la nouvelle image :latest
+        // K8s re-télécharge l'image grâce à imagePullPolicy: Always
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh """
+                    set -eu
+
+                    echo "Deploiement sur Kubernetes — namespace: \${K8S_NAMESPACE}"
+
+                    # Applique les manifests (idempotent — sans effet si déjà à jour)
+                    kubectl apply -f k8s/namespace.yaml
+                    kubectl apply -f k8s/secret.yaml
+                    kubectl apply -f k8s/configmap.yaml
+                    kubectl apply -f k8s/mongo/
+                    kubectl apply -f k8s/backend/
+                    kubectl apply -f k8s/frontend/
+
+                    # Force le redémarrage des Pods backend et frontend
+                    # pour récupérer la nouvelle image :latest depuis Docker Hub
+                    kubectl rollout restart deployment/backend-deployment -n \${K8S_NAMESPACE}
+                    kubectl rollout restart deployment/frontend-deployment -n \${K8S_NAMESPACE}
+
+                    # Attendre que le rollout soit terminé (timeout 2 min)
+                    kubectl rollout status deployment/backend-deployment -n \${K8S_NAMESPACE} --timeout=120s
+                    kubectl rollout status deployment/frontend-deployment -n \${K8S_NAMESPACE} --timeout=120s
+
+                    echo "Deploiement termine avec succes"
+                    kubectl get pods -n \${K8S_NAMESPACE}
+                """
+            }
+        }
     }
 
     post {
@@ -167,10 +200,10 @@ EOF
             """
         }
         success {
-            echo "Pipeline reussi - images publiees avec le tag ${env.IMAGE_TAG}"
+            echo "Pipeline reussi - images publiees avec le tag ${env.IMAGE_TAG} et deploiees sur K8s"
         }
         failure {
-            echo 'Pipeline echoue - consultez les logs Jenkins ou le Quality Gate SonarQube.'
+            echo 'Pipeline echoue - consultez les logs Jenkins.'
         }
     }
 }
