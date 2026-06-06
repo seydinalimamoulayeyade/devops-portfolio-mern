@@ -1,0 +1,16 @@
+# k8s/namespace.yaml
+#
+# Le Namespace isole toutes les ressources du projet dans un espace dédié.
+# Avantages :
+#   - Séparation claire entre projets sur le même cluster
+#   - Suppression facile : kubectl delete namespace devops-portfolio
+#     supprime TOUT ce qui est dans ce namespace en une commande
+#   - Contrôle d'accès et quotas appliquables par namespace
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devops-portfolio
+  labels:
+    app: devops-portfolio-mern
+    managed-by: kubectl

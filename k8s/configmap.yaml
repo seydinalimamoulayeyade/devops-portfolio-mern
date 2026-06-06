@@ -1,0 +1,34 @@
+# k8s/configmap.yaml
+#
+# Le ConfigMap stocke les variables d'environnement NON sensibles.
+# Contrairement au Secret, les valeurs sont en clair — pas de base64.
+#
+# Règle simple :
+#   Donnée sensible (mot de passe, token, clé) → Secret
+#   Donnée de configuration (URL, port, nom) → ConfigMap
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mern-config
+  namespace: devops-portfolio
+  labels:
+    app: devops-portfolio-mern
+data:
+  # Environnement d'exécution Node.js
+  NODE_ENV: "production"
+
+  # Port d'écoute du backend Express
+  PORT: "5000"
+
+  # Nom de la base de données MongoDB
+  MONGO_DB_NAME: "devops-portfolio"
+
+  # URL de l'API consommée par le frontend React (via Vite)
+  # "backend-service" = nom du Service K8s backend (défini plus tard)
+  # En K8s, les services se contactent par leur nom DNS interne
+  VITE_API_URL: "http://backend-service:5000/api"
+
+  # Nom du conteneur MongoDB — utilisé pour les logs et le monitoring
+  MONGO_HOST: "mongo-service"
+  MONGO_PORT: "27017"
