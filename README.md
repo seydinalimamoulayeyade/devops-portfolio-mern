@@ -1,9 +1,14 @@
 # devops-portfolio-mern
 
-> Application fullstack MERN containerisée — fil rouge de la formation Cloud & DevOps à l'Orange Digital Center (ODC).
+> Application fullstack MERN — projet fil rouge de la formation Cloud & DevOps à l'Orange Digital Center (ODC).  
+> Pipeline CI/CD complet : Tests → Qualité → Build → Déploiement Kubernetes automatisé.
 
 ![Stack](https://img.shields.io/badge/Stack-MERN-61DAFB?style=flat-square&logo=react)
 ![Docker](https://img.shields.io/badge/Docker-Containerisé-2496ED?style=flat-square&logo=docker)
+![Jenkins](https://img.shields.io/badge/Jenkins-Pipeline%206%20stages-D24939?style=flat-square&logo=jenkins)
+![SonarQube](https://img.shields.io/badge/SonarQube-Quality%20Gate%20✓-4E9BCD?style=flat-square&logo=sonarqube)
+![Jest](https://img.shields.io/badge/Jest-59%20tests%20%7C%2080.3%25-C21325?style=flat-square&logo=jest)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Déployé-326CE5?style=flat-square&logo=kubernetes)
 ![Docker Hub](https://img.shields.io/badge/Docker%20Hub-lims4-2496ED?style=flat-square&logo=docker)
 ![License](https://img.shields.io/badge/Licence-MIT-green?style=flat-square)
 
@@ -11,31 +16,118 @@
 
 ## Présentation
 
-**devops-portfolio-mern** est une application de gestion de portfolio technique, conçue pour servir de projet fil rouge tout au long de la formation DevOps. Chaque module de la formation ajoute une couche concrète au même projet — de la containerisation Docker jusqu'au monitoring Prometheus/Grafana, en passant par Jenkins, Kubernetes et Terraform.
+**devops-portfolio-mern** est une application de gestion de portfolio technique, conçue pour servir de projet fil rouge tout au long de la formation DevOps. Chaque module ajoute une couche concrète au même projet — de la conteneurisation Docker jusqu'au déploiement Kubernetes automatisé via Jenkins.
 
 ### Stack technique
 
 | Couche | Technologie |
 |--------|-------------|
-| Frontend | React 18 + Vite + Tailwind CSS |
-| Backend | Node.js + Express |
-| Base de données | MongoDB + Mongoose |
+| Frontend | React 19 + Vite + Tailwind CSS v4 |
+| Backend | Node.js 22 LTS + Express |
+| Base de données | MongoDB 7 + Mongoose |
 | Auth | JWT (JSON Web Tokens) |
 | Upload | Multer (stockage local) |
-| Containerisation | Docker + Docker Compose |
+| Conteneurisation | Docker + Docker Compose |
+| CI/CD | Jenkins (Pipeline 6 stages) |
+| Qualité code | SonarQube 10.7 + Quality Gate |
+| Tests | Jest 29 + Supertest + mongodb-memory-server |
+| Orchestration | Kubernetes (Docker Desktop) |
+
+---
+
+## Pipeline CI/CD
+
+Chaque `git push` sur `main` déclenche automatiquement le pipeline Jenkins complet :
+
+```
+git push
+    │
+    ▼
+[1] Checkout          — récupère le code, calcule le tag versionné (date + commit hash)
+    │
+    ▼
+[2] Backend Tests     — Jest 59 tests, coverage LCOV (80.3%)
+    │
+    ▼
+[3] SonarQube         — analyse qualité JS/CSS (33 fichiers, 0 bug, 0 vulnerability)
+    │
+    ▼
+[4] Quality Gate      — bloque si coverage < 80% ou issues détectées
+    │
+    ▼
+[5] Build & Push      — docker build + docker push (latest + tag versionné)
+    │
+    ▼
+[6] Deploy K8s        — kubectl apply + rollout restart + rollout status
+```
+
+### Métriques qualité
+
+| Métrique | Valeur |
+|----------|--------|
+| Tests | 59 passés / 0 échoué |
+| Coverage global | 80.3% |
+| Bugs SonarQube | 0 |
+| Vulnerabilities | 0 |
+| Code Smells | 0 (new code) |
+| Duplications | 0.0% |
+| Quality Gate | ✅ PASSED |
+
+---
+
+## Architecture Kubernetes
+
+```
+                    ┌──────────────────────────────────────────┐
+                    │       Namespace: devops-portfolio         │
+                    │                                           │
+Browser :3000 ────► │  frontend-service (NodePort :30080)       │
+  (port-forward)    │       │                                   │
+                    │       ▼                                   │
+                    │  frontend Pod (nginx :80)                 │
+                    │       │ /api/*                            │
+                    │       ▼                                   │
+                    │  backend-service (ClusterIP :5000)        │
+                    │       │                                   │
+                    │       ▼                                   │
+                    │  backend Pod (Express :5000)              │
+                    │       │                                   │
+                    │       ▼                                   │
+                    │  mongo-service (ClusterIP :27017)         │
+                    │       │                                   │
+                    │       ▼                                   │
+                    │  mongo Pod (MongoDB :27017)               │
+                    │       │                                   │
+                    │       ▼                                   │
+                    │  mongo-pvc (PersistentVolume 1Gi)         │
+                    └──────────────────────────────────────────┘
+```
+
+### Objets K8s déployés
+
+| Objet | Nom | Rôle |
+|-------|-----|------|
+| Namespace | devops-portfolio | Isolation du projet |
+| Secret | mern-secret | JWT_SECRET, MONGO_PASSWORD, MONGO_URI |
+| ConfigMap | mern-config | NODE_ENV, PORT, VITE_API_URL |
+| Deployment | mongo-deployment | MongoDB 7 — 1 replica |
+| Deployment | backend-deployment | Express API — 1 replica |
+| Deployment | frontend-deployment | Nginx/React — 1 replica |
+| Service ClusterIP | mongo-service | DNS interne MongoDB |
+| Service ClusterIP | backend-service | DNS interne Backend |
+| Service NodePort | frontend-service | Port 30080 externe |
+| PVC | mongo-pvc | Stockage persistant 1Gi |
+| ServiceAccount | jenkins-deployer | Identité Jenkins dans K8s |
+| Role + RoleBinding | jenkins-deploy-role | Droits limités au namespace |
 
 ---
 
 ## Images Docker Hub
 
-Les images sont publiées et disponibles publiquement :
-
-| Service | Image | Taille |
-|---------|-------|--------|
-| Frontend | `docker pull lims4/devops-portfolio-mern-frontend:latest` | ~26 MB |
-| Backend | `docker pull lims4/devops-portfolio-mern-backend:latest` | ~65 MB |
-
-> Le frontend utilise un **multi-stage build** (Node.js → Nginx alpine) — l'image finale ne contient que les fichiers statiques compilés, sans Node.js ni dépendances de développement.
+| Service | Image |
+|---------|-------|
+| Frontend | `docker pull lims4/devops-portfolio-mern-frontend:latest` |
+| Backend | `docker pull lims4/devops-portfolio-mern-backend:latest` |
 
 ---
 
@@ -43,30 +135,51 @@ Les images sont publiées et disponibles publiquement :
 
 ```
 devops-portfolio-mern/
-├── frontend/                   # Application React (Vite)
+├── frontend/                    # Application React (Vite)
 │   ├── src/
-│   │   ├── components/         # Composants UI réutilisables
-│   │   ├── pages/              # Vues / routes
-│   │   ├── context/            # État global (AuthContext)
-│   │   ├── services/           # Appels API (axios)
-│   │   └── hooks/              # Custom hooks
-│   ├── public/
+│   │   ├── components/          # Composants UI réutilisables
+│   │   ├── pages/               # Vues / routes
+│   │   ├── context/             # État global (AuthContext)
+│   │   ├── services/            # Appels API (axios)
+│   │   └── hooks/               # Custom hooks
 │   ├── .dockerignore
-│   ├── Dockerfile              # Multi-stage build (Node.js → Nginx)
+│   ├── Dockerfile               # Multi-stage build (Node.js → Nginx)
 │   └── package.json
-├── backend/                    # API Node.js / Express
+├── backend/                     # API Node.js / Express
 │   ├── src/
-│   │   ├── config/             # Connexion MongoDB
-│   │   ├── controllers/        # Logique métier
-│   │   ├── middleware/         # Auth, upload, erreurs
-│   │   ├── models/             # Schémas Mongoose
-│   │   ├── routes/             # Endpoints REST
-│   │   └── utils/              # Fonctions helpers
-│   ├── uploads/                # Images uploadées (non versionné)
+│   │   ├── __tests__/           # Tests Jest (59 tests, 5 suites)
+│   │   │   ├── utils.test.js
+│   │   │   ├── authMiddleware.test.js
+│   │   │   ├── health.test.js
+│   │   │   ├── auth.test.js
+│   │   │   └── projects.test.js
+│   │   ├── config/              # Connexion MongoDB
+│   │   ├── controllers/         # Logique métier
+│   │   ├── middleware/          # Auth, upload
+│   │   ├── models/              # Schémas Mongoose
+│   │   └── routes/              # Endpoints REST
 │   ├── .dockerignore
 │   ├── Dockerfile
 │   └── package.json
-├── docker-compose.yml
+├── k8s/                         # Manifests Kubernetes
+│   ├── namespace.yaml
+│   ├── secret.yaml
+│   ├── configmap.yaml
+│   ├── jenkins-rbac.yaml
+│   ├── mongo/
+│   │   ├── pvc.yaml
+│   │   ├── deployment.yaml
+│   │   └── service.yaml
+│   ├── backend/
+│   │   ├── deployment.yaml
+│   │   └── service.yaml
+│   └── frontend/
+│       ├── deployment.yaml
+│       └── service.yaml
+├── docker-compose.yml           # Stack applicative locale
+├── docker-compose.sonar.yml     # Infrastructure SonarQube + PostgreSQL
+├── Jenkinsfile                  # Pipeline CI/CD 6 stages
+├── sonar-project.properties     # Configuration SonarQube
 ├── .gitignore
 └── README.md
 ```
@@ -80,14 +193,7 @@ devops-portfolio-mern/
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installé et lancé
 - Git
 
-### Option 1 — Depuis Docker Hub (sans cloner le repo)
-
-```bash
-docker pull lims4/devops-portfolio-mern-frontend:latest
-docker pull lims4/devops-portfolio-mern-backend:latest
-```
-
-### Option 2 — Depuis le code source
+### Option 1 — Docker Compose (développement local)
 
 ```bash
 git clone https://github.com/seydinalimamoulayeyade/devops-portfolio-mern.git
@@ -101,79 +207,56 @@ docker compose up --build
 |---------|-----|
 | Frontend | http://localhost |
 | Backend API | http://localhost:5000/api |
-| MongoDB | mongodb://localhost:27017 |
+| Health check | http://localhost:5000/api/health |
 
----
-
-## Configuration
-
-### Variables d'environnement
-
-Copie les fichiers d'exemple et renseigne les valeurs :
+### Option 2 — Kubernetes (Docker Desktop)
 
 ```bash
-cp .env.example .env
-cp backend/.env.example backend/.env
+# Prérequis : Kubernetes activé dans Docker Desktop
+
+# 1. Créer le namespace
+kubectl apply -f k8s/namespace.yaml
+
+# 2. Appliquer les secrets et la configuration
+kubectl apply -f k8s/secret.yaml
+kubectl apply -f k8s/configmap.yaml
+
+# 3. Déployer MongoDB
+kubectl apply -f k8s/mongo/
+
+# 4. Déployer Backend et Frontend
+kubectl apply -f k8s/backend/
+kubectl apply -f k8s/frontend/
+
+# 5. Accéder à l'application (Docker Desktop Windows)
+kubectl port-forward service/frontend-service 3000:80 -n devops-portfolio
 ```
 
-**`.env` (racine, Docker Compose)**
-
-```env
-JWT_SECRET=change_this_secret
-VITE_API_URL=http://localhost:5000/api
-```
-
-**`backend/.env` (developpement local hors Docker)**
-
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/filrouge
-JWT_SECRET=change_this_secret
-```
-
-> En environnement Docker Compose, `MONGO_URI` est injecté par `docker-compose.yml` avec `mongodb://mongo:27017/filrouge`. Le nom `mongo` est résolu par le DNS interne du réseau `mern-network`.
+Ouvrir **http://localhost:3000**
 
 ---
 
-## Architecture Docker
-
-```
-                    ┌─────────────────────────────────────┐
-                    │         mern-network (bridge)        │
-                    │                                      │
-Navigateur :80 ───► │  frontend (Nginx)                    │
-                    │       │                              │
-                    │       ▼                              │
-                    │  backend (Express :5000)             │
-                    │       │                              │
-                    │       ▼                              │
-                    │  mongo (MongoDB :27017)              │
-                    └─────────────────────────────────────┘
-```
-
-Les 3 services communiquent via le réseau bridge `mern-network`. Chaque service est accessible par son nom (DNS interne Docker). Le frontend est servi par **Nginx** sur le port `80`.
-
----
-
-## Lancement sans Docker
-
-### Backend
+## Tests
 
 ```bash
 cd backend
-npm install
-npm run dev
+
+# Lancer les tests avec coverage
+npm test
+
+# Mode CI (sans interactivité)
+npm run test:ci
 ```
 
-### Frontend
+### Suites de tests
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-> MongoDB doit tourner localement sur le port `27017`.
+| Suite | Type | Tests |
+|-------|------|-------|
+| utils.test.js | Unitaire | 15 — normalizeTechnologies, cleanProjectPayload |
+| authMiddleware.test.js | Unitaire | 10 — protect, requireAdmin |
+| health.test.js | Intégration | 6 — GET /, /api/health, /api/auth |
+| auth.test.js | Intégration | 6 — login complet (mongodb-memory-server) |
+| projects.test.js | Intégration | 22 — CRUD /api/projets (mongodb-memory-server) |
 
 ---
 
@@ -182,8 +265,8 @@ npm run dev
 ### Projets
 
 ```
-GET    /api/projets          Liste tous les projets
-GET    /api/projets/:id      Détail d'un projet
+GET    /api/projets          Liste tous les projets (public)
+GET    /api/projets/:id      Détail d'un projet (public)
 POST   /api/projets          Créer un projet (admin requis)
 PUT    /api/projets/:id      Modifier un projet (admin requis)
 DELETE /api/projets/:id      Supprimer un projet (admin requis)
@@ -192,114 +275,101 @@ DELETE /api/projets/:id      Supprimer un projet (admin requis)
 ### Authentification
 
 ```
-POST   /api/auth/register    Désactivé (403)
+POST   /api/auth/register    Désactivé — 403
 POST   /api/auth/login       Connexion — retourne un token JWT
+GET    /api/health           Statut du serveur → { "status": "ok" }
 ```
 
 ### Compte administrateur
 
-L'inscription publique est fermée. Le compte admin se crée ou se réinitialise depuis le backend :
-
 ```bash
-cd backend
-npm run seed:admin
-```
-
-Avec Docker Compose déjà lancé, utilisez plutôt :
-
-```bash
+# Avec Docker Compose
 docker exec backend npm run seed:admin
+
+# En local
+cd backend && npm run seed:admin
 ```
 
-Variables optionnelles :
+---
+
+## Configuration
+
+### Variables d'environnement
+
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+```
+
+**`.env` (racine)**
 
 ```env
-ADMIN_EMAIL=admin@test.com
-ADMIN_PASSWORD=#admin123
+JWT_SECRET=change_this_secret
+VITE_API_URL=http://localhost:5000/api
 ```
 
-### Health Check
+**`backend/.env`**
 
-```
-GET    /api/health           Statut du serveur → { "status": "ok" }
+```env
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/filrouge
+JWT_SECRET=change_this_secret
 ```
 
 ---
 
-## Commandes Docker utiles
+## Commandes utiles
+
+### Docker Compose
 
 ```bash
-# Lancer tous les services (rebuild des images)
-docker compose up --build
-
-# Lancer en arrière-plan
-docker compose up -d
-
-# Voir les conteneurs et leur statut healthy
-docker ps
-
-# Logs en temps réel
-docker compose logs -f
-
-# Logs d'un service spécifique
-docker compose logs -f backend
-docker compose logs -f frontend
-docker compose logs -f mongo
-
-# Entrer dans un conteneur
-docker exec -it backend sh
-docker exec -it frontend sh
-
-# Accéder à MongoDB
-docker exec -it mongo mongosh
-
-# Inspecter le réseau Docker
-docker network inspect devops-portfolio-mern_mern-network
-
-# Arrêter les services
-docker compose down
-
-# Arrêter et supprimer les volumes (repart de zéro)
-docker compose down -v
-
-# Nettoyer les images et le cache
-docker system prune -f
+docker compose up --build          # Lancer et construire
+docker compose up -d               # Lancer en arrière-plan
+docker compose logs -f backend     # Logs backend en temps réel
+docker compose down -v             # Arrêter et supprimer les volumes
 ```
 
----
+### Kubernetes
 
-## Volumes Docker
+```bash
+kubectl get all -n devops-portfolio                              # Vue complète
+kubectl get pods -n devops-portfolio -w                         # Surveillance temps réel
+kubectl logs -n devops-portfolio deployment/backend-deployment  # Logs backend
+kubectl rollout restart deployment/backend-deployment -n devops-portfolio
+kubectl port-forward service/frontend-service 3000:80 -n devops-portfolio
+```
 
-```yaml
-./backend/uploads:/app/uploads   # Bind mount — images persistées sur la machine hôte
-mongo_data:/data/db              # Volume Docker — données MongoDB persistées
+### Infrastructure locale (après redémarrage)
+
+```bash
+docker start jenkins                                                    # Démarrer Jenkins
+docker compose -f docker-compose.sonar.yml up -d                       # Démarrer SonarQube
+ngrok http --domain=nuclei-mosaic-ecard.ngrok-free.app 8080            # Tunnel GitHub webhook
+kubectl get pods -n devops-portfolio                                    # Vérifier K8s
 ```
 
 ---
 
 ## Roadmap DevOps
 
-Ce projet évolue module par module tout au long de la formation :
-
 | Module | Technologie | Statut |
 |--------|-------------|--------|
-| 1 | DevOps intro — Git flow, branching, README | ✅ Fait |
-| 2 | Docker — Dockerfile, Docker Compose, Docker Hub | ✅ Fait |
-| 3 | Jenkins — Pipeline CI/CD | 🔜 À venir |
-| 4 | SonarQube — Qualité du code | 🔜 À venir |
-| 5 | Kubernetes — Orchestration | 🔜 À venir |
-| 6 | Terraform — Infrastructure as Code | 🔜 À venir |
-| 7 | Prometheus / Grafana — Monitoring | 🔜 À venir |
-| 8 | Trivy — Scan de sécurité | 🔜 À venir |
-| 9 | Outils IA pour DevOps | 🔜 À venir |
+| 1 | Docker + Docker Compose | ✅ Complété |
+| 2 | Jenkins — Pipeline CI/CD | ✅ Complété |
+| 3 | SonarQube + Tests Jest | ✅ Complété |
+| 4 | Kubernetes | ✅ Complété |
+| 5 | Terraform — Infrastructure as Code | 🔜 À venir |
+| 6 | Prometheus / Grafana — Monitoring | 🔜 À venir |
+| 7 | Trivy — Scan de sécurité | 🔜 À venir |
+| 8 | Outils IA pour DevOps | 🔜 À venir |
 
 ---
 
 ## Auteur
 
-**Seydina Lima Mamoulaye Yade**
-Formation Cloud AWS & DevOps — Orange Digital Center (ODC)
-[GitHub](https://github.com/seydinalimamoulayeyade) · [Docker Hub](https://hub.docker.com/u/lims4)
+**Seydina Limamou Laye Yade**  
+Formation Cloud AWS & DevOps — Orange Digital Center (ODC)  
+[GitHub](https://github.com/seydinalimamoulayeyade) · [Docker Hub](https://hub.docker.com/u/lims4) · [LinkedIn](https://linkedin.com/in/seydinalimamoulayeyade)
 
 ---
 
