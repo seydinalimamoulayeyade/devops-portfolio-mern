@@ -10,13 +10,11 @@ pipeline {
     }
 
     environment {
-        DOCKERHUB_USER        = 'lims4'
-        FRONTEND_IMAGE        = "${DOCKERHUB_USER}/devops-portfolio-mern-frontend"
-        BACKEND_IMAGE         = "${DOCKERHUB_USER}/devops-portfolio-mern-backend"
-        VITE_API_URL          = 'http://localhost:5000/api'
-        COMPOSE_ENV           = '.env.ci'
-        SONAR_PROJECT_KEY     = 'devops-portfolio-mern'
-        K8S_NAMESPACE         = 'devops-portfolio'
+        DOCKERHUB_USER    = 'lims4'
+        FRONTEND_IMAGE    = "${DOCKERHUB_USER}/devops-portfolio-mern-frontend"
+        BACKEND_IMAGE     = "${DOCKERHUB_USER}/devops-portfolio-mern-backend"
+        SONAR_PROJECT_KEY = 'devops-portfolio-mern'
+        K8S_NAMESPACE     = 'devops-portfolio'
     }
 
     stages {
@@ -37,6 +35,7 @@ pipeline {
         }
 
         // ── 2. BACKEND TESTS ─────────────────────────────────────────
+        // Jest + coverage LCOV transmis à SonarQube
         stage('Backend Tests') {
             tools {
                 nodejs 'NodeJS'
@@ -79,6 +78,7 @@ pipeline {
         }
 
         // ── 4. QUALITY GATE ──────────────────────────────────────────
+        // Bloque le pipeline si la qualité est insuffisante
         stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
@@ -87,75 +87,53 @@ pipeline {
             }
         }
 
-        // ── 5. BUILD & TEST ──────────────────────────────────────────
-        stage('Build and test') {
+        // ── 5. BUILD & PUSH ───────────────────────────────────────────
+        // Construction et push des images Docker en une seule étape
+        // Remplace l'ancien "Build and test" + "Push images" séparés
+        stage('Build & Push') {
             steps {
-                withCredentials([string(
-                    credentialsId: 'jwt-secret',
-                    variable: 'JWT_SECRET_VALUE'
-                )]) {
-                    sh """
-                        set -eu
-
-                        cat > "\${COMPOSE_ENV}" <<EOF
-COMPOSE_PROJECT_NAME=devops-portfolio-mern-ci
-JWT_SECRET=\${JWT_SECRET_VALUE}
-VITE_API_URL=\${VITE_API_URL}
-MONGO_CONTAINER_NAME=ci-mongo
-BACKEND_CONTAINER_NAME=ci-backend
-FRONTEND_CONTAINER_NAME=ci-frontend
-MONGO_PORT=27018
-BACKEND_PORT=5001
-FRONTEND_PORT=8081
-EOF
-
-                        chmod 600 "\${COMPOSE_ENV}"
-
-                        docker --version
-                        docker compose version
-
-                        docker compose --env-file "\${COMPOSE_ENV}" down --remove-orphans -v || true
-                        docker rm -f ci-frontend ci-backend ci-mongo 2>/dev/null || true
-
-                        if ! docker compose --env-file "\${COMPOSE_ENV}" up --build --wait --wait-timeout 180 --force-recreate --remove-orphans; then
-                            docker compose --env-file "\${COMPOSE_ENV}" logs
-                            exit 1
-                        fi
-
-                        docker compose --env-file "\${COMPOSE_ENV}" ps
-                    """
-                }
-            }
-        }
-
-        // ── 6. PUSH IMAGES ───────────────────────────────────────────
-        stage('Push images') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-credentials',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    ),
+                    string(
+                        credentialsId: 'jwt-secret',
+                        variable: 'JWT_SECRET_VALUE'
+                    )
+                ]) {
                     sh """
                         set -eu
 
                         echo "\${DOCKER_PASS}" | docker login -u "\${DOCKER_USER}" --password-stdin
 
-                        docker tag "\${FRONTEND_IMAGE}:latest" "\${FRONTEND_IMAGE}:\${IMAGE_TAG}"
-                        docker tag "\${BACKEND_IMAGE}:latest" "\${BACKEND_IMAGE}:\${IMAGE_TAG}"
+                        # Build backend
+                        docker build \
+                            -t "\${BACKEND_IMAGE}:latest" \
+                            -t "\${BACKEND_IMAGE}:\${IMAGE_TAG}" \
+                            ./backend
 
-                        docker push "\${FRONTEND_IMAGE}:latest"
+                        # Build frontend avec l'URL d'API injectée au build
+                        docker build \
+                            --build-arg VITE_API_URL=/api \
+                            -t "\${FRONTEND_IMAGE}:latest" \
+                            -t "\${FRONTEND_IMAGE}:\${IMAGE_TAG}" \
+                            ./frontend
+
+                        # Push toutes les images
                         docker push "\${BACKEND_IMAGE}:latest"
-                        docker push "\${FRONTEND_IMAGE}:\${IMAGE_TAG}"
                         docker push "\${BACKEND_IMAGE}:\${IMAGE_TAG}"
+                        docker push "\${FRONTEND_IMAGE}:latest"
+                        docker push "\${FRONTEND_IMAGE}:\${IMAGE_TAG}"
                     """
                 }
             }
         }
 
-        // ── 7. DEPLOY TO KUBERNETES ───────────────────────────────────
-        // Redémarre les Deployments pour forcer le pull de la nouvelle image :latest
-        // K8s re-télécharge l'image grâce à imagePullPolicy: Always
+        // ── 6. DEPLOY TO KUBERNETES ───────────────────────────────────
+        // Applique les manifests et redémarre les Pods
+        // K8s pull la nouvelle image :latest grâce à imagePullPolicy: Always
         stage('Deploy to Kubernetes') {
             steps {
                 sh """
@@ -163,7 +141,7 @@ EOF
 
                     echo "Deploiement sur Kubernetes — namespace: \${K8S_NAMESPACE}"
 
-                    # Applique les manifests (idempotent — sans effet si déjà à jour)
+                    # Applique les manifests (idempotent)
                     kubectl apply -f k8s/namespace.yaml
                     kubectl apply -f k8s/secret.yaml
                     kubectl apply -f k8s/configmap.yaml
@@ -171,16 +149,15 @@ EOF
                     kubectl apply -f k8s/backend/
                     kubectl apply -f k8s/frontend/
 
-                    # Force le redémarrage des Pods backend et frontend
-                    # pour récupérer la nouvelle image :latest depuis Docker Hub
+                    # Redémarre backend et frontend pour récupérer la nouvelle image
                     kubectl rollout restart deployment/backend-deployment -n \${K8S_NAMESPACE}
                     kubectl rollout restart deployment/frontend-deployment -n \${K8S_NAMESPACE}
 
-                    # Attendre que le rollout soit terminé (timeout 2 min)
+                    # Attend la fin du rollout (timeout 2 min)
                     kubectl rollout status deployment/backend-deployment -n \${K8S_NAMESPACE} --timeout=120s
                     kubectl rollout status deployment/frontend-deployment -n \${K8S_NAMESPACE} --timeout=120s
 
-                    echo "Deploiement termine avec succes"
+                    echo "Deploiement termine — pods en cours:"
                     kubectl get pods -n \${K8S_NAMESPACE}
                 """
             }
@@ -189,21 +166,13 @@ EOF
 
     post {
         always {
-            sh """
-                if command -v docker >/dev/null 2>&1; then
-                    docker logout || true
-                    if [ -f "\${COMPOSE_ENV}" ]; then
-                        docker compose --env-file "\${COMPOSE_ENV}" down --remove-orphans -v || true
-                    fi
-                fi
-                rm -f "\${COMPOSE_ENV}"
-            """
+            sh "docker logout || true"
         }
         success {
-            echo "Pipeline reussi - images publiees avec le tag ${env.IMAGE_TAG} et deploiees sur K8s"
+            echo "Pipeline reussi — tag: ${env.IMAGE_TAG} deploye sur K8s"
         }
         failure {
-            echo 'Pipeline echoue - consultez les logs Jenkins.'
+            echo "Pipeline echoue — consultez les logs Jenkins."
         }
     }
 }
