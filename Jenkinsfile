@@ -18,7 +18,6 @@ pipeline {
     }
 
     stages {
-
         // ── 1. CHECKOUT ─────────────────────────────────────────────
         stage('Checkout') {
             steps {
@@ -141,13 +140,15 @@ pipeline {
 
                     echo "Deploiement sur Kubernetes — namespace: \${K8S_NAMESPACE}"
 
+                    # Le namespace est géré manuellement — pas dans le pipeline
+                    # kubectl apply -f k8s/namespace.yaml
+
                     # Applique les manifests (idempotent)
-                    kubectl apply -f k8s/namespace.yaml
-                    kubectl apply -f k8s/secret.yaml
-                    kubectl apply -f k8s/configmap.yaml
-                    kubectl apply -f k8s/mongo/
-                    kubectl apply -f k8s/backend/
-                    kubectl apply -f k8s/frontend/
+                    kubectl apply -f k8s/secret.yaml -n \${K8S_NAMESPACE}
+                    kubectl apply -f k8s/configmap.yaml -n \${K8S_NAMESPACE}
+                    kubectl apply -f k8s/mongo/ -n \${K8S_NAMESPACE}
+                    kubectl apply -f k8s/backend/ -n \${K8S_NAMESPACE}
+                    kubectl apply -f k8s/frontend/ -n \${K8S_NAMESPACE}
 
                     # Redémarre backend et frontend pour récupérer la nouvelle image
                     kubectl rollout restart deployment/backend-deployment -n \${K8S_NAMESPACE}
@@ -166,13 +167,13 @@ pipeline {
 
     post {
         always {
-            sh "docker logout || true"
+            sh 'docker logout || true'
         }
         success {
             echo "Pipeline reussi — tag: ${env.IMAGE_TAG} deploye sur K8s"
         }
         failure {
-            echo "Pipeline echoue — consultez les logs Jenkins."
+            echo 'Pipeline echoue — consultez les logs Jenkins.'
         }
     }
 }
