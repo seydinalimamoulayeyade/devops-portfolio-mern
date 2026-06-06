@@ -1,0 +1,83 @@
+# k8s/mongo/deployment.yaml
+#
+# Deployment MongoDB — décrit l'état désiré du Pod MongoDB
+#
+# Pourquoi 1 seul replica pour MongoDB ?
+# MongoDB standalone ne supporte pas plusieurs replicas sans Replica Set.
+# Pour la haute disponibilité en production, on utiliserait
+# un StatefulSet + MongoDB Replica Set ou un opérateur comme MongoDB Atlas.
+# Pour ce portfolio, 1 replica suffit.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-deployment
+  namespace: devops-portfolio
+  labels:
+    app: mongo
+spec:
+  replicas: 1
+  selector:
+    # K8s utilise ce selector pour savoir quels Pods appartiennent
+    # à ce Deployment. Doit correspondre exactement aux labels du Pod.
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7
+          ports:
+            - containerPort: 27017
+          env:
+            # Mot de passe root MongoDB — injecté depuis le Secret
+            # K8s remplace cette variable par la valeur décodée du Secret
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: "admin"
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mern-secret
+                  key: MONGO_PASSWORD
+            - name: MONGO_INITDB_DATABASE
+              value: "filrouge"
+          volumeMounts:
+            # Monte le PVC dans le dossier de données MongoDB
+            - name: mongo-storage
+              mountPath: /data/db
+          # Healthcheck — K8s vérifie que MongoDB répond avant de router le trafic
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - "--eval"
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - mongosh
+                - "--eval"
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        # Déclare le volume en référençant le PVC créé précédemment
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-pvc

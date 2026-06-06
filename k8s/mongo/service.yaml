@@ -1,0 +1,30 @@
+# k8s/mongo/service.yaml
+#
+# Service MongoDB — expose MongoDB aux autres Pods du cluster
+#
+# Sans Service, les Pods ont des IPs éphémères qui changent à chaque redémarrage.
+# Le Service fournit un nom DNS stable : "mongo-service"
+# C'est pourquoi MONGO_URI utilise "mongo-service:27017" et non une IP.
+#
+# Type ClusterIP = accessible uniquement DANS le cluster.
+# MongoDB ne doit jamais être exposé à l'extérieur.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-service
+  namespace: devops-portfolio
+  labels:
+    app: mongo
+spec:
+  # ClusterIP = DNS interne uniquement, pas d'accès externe
+  type: ClusterIP
+  selector:
+    # Route le trafic vers les Pods avec ce label
+    # Doit correspondre aux labels du Deployment MongoDB
+    app: mongo
+  ports:
+    - name: mongo
+      protocol: TCP
+      port: 27017        # port exposé par le Service
+      targetPort: 27017  # port du conteneur MongoDB

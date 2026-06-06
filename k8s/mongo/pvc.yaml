@@ -1,0 +1,28 @@
+# k8s/mongo/pvc.yaml
+#
+# PersistentVolumeClaim — demande de stockage pour MongoDB
+#
+# Sans PVC, les données MongoDB disparaissent à chaque redémarrage du Pod.
+# Avec PVC, les données survivent aux redémarrages, mises à jour, et crashes.
+#
+# Sur Docker Desktop, le StorageClass "hostpath" est disponible par défaut
+# et provisionne automatiquement le stockage sur ta machine Windows.
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+  namespace: devops-portfolio
+  labels:
+    app: mongo
+spec:
+  accessModes:
+    # ReadWriteOnce = monté en lecture/écriture par un seul Node à la fois
+    # Adapté pour une base de données single-instance
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  # Sur Docker Desktop, "hostpath" est le StorageClass par défaut
+  # En production cloud : "gp2" (AWS), "standard" (GCP), "managed" (Azure)
+  storageClassName: hostpath
