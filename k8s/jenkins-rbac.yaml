@@ -1,0 +1,63 @@
+# k8s/jenkins-rbac.yaml
+#
+# ServiceAccount dédié à Jenkins pour déployer sur K8s
+#
+# Principe du moindre privilège :
+#   Jenkins a uniquement les droits nécessaires sur le namespace devops-portfolio
+#   Il ne peut pas toucher aux autres namespaces ni aux ressources cluster-wide
+#
+# Objets créés :
+#   ServiceAccount  → identité Jenkins dans K8s
+#   Role            → liste des permissions dans le namespace
+#   RoleBinding     → lie le ServiceAccount au Role
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins-deployer
+  namespace: devops-portfolio
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jenkins-deploy-role
+  namespace: devops-portfolio
+rules:
+  # Droits sur les Deployments — pour kubectl apply et rollout restart
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  # Droits sur les Pods — pour kubectl get pods
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+  # Droits sur les Services
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  # Droits sur ConfigMap et Secret
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  # Droits sur PersistentVolumeClaims
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-deploy-binding
+  namespace: devops-portfolio
+subjects:
+  - kind: ServiceAccount
+    name: jenkins-deployer
+    namespace: devops-portfolio
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: jenkins-deploy-role
