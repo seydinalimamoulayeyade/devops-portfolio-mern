@@ -6,7 +6,7 @@ pipeline {
     }
 
     triggers {
-        githubPush()
+        pollSCM('H/5 * * * *')
     }
 
     environment {
@@ -192,7 +192,7 @@ pipeline {
     ✅ Deploy to Kubernetes
                 """.stripIndent()
             )
-            }
+        }
             failure {
                 echo 'Pipeline echoue — consultez les logs Jenkins.'
                 mail(
@@ -223,6 +223,6 @@ pipeline {
     Lien     : ${env.BUILD_URL}
                 """.stripIndent()
             )
-        }
+            }
     }
 }
