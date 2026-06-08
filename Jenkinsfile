@@ -171,9 +171,58 @@ pipeline {
         }
         success {
             echo "Pipeline reussi — tag: ${env.IMAGE_TAG} deploye sur K8s"
-        }
-        failure {
-            echo 'Pipeline echoue — consultez les logs Jenkins.'
+            mail(
+            to: 'seydinalimamoulayeyade@gmail.com',
+            subject: "✅ [Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} — SUCCESS",
+            body: """
+    Pipeline terminé avec succès.
+
+    Projet   : ${env.JOB_NAME}
+    Build    : #${env.BUILD_NUMBER}
+    Tag      : ${env.IMAGE_TAG}
+    Durée    : ${currentBuild.durationString}
+    Lien     : ${env.BUILD_URL}
+
+    Stages exécutés :
+    ✅ Checkout
+    ✅ Backend Tests
+    ✅ SonarQube Analysis
+    ✅ Quality Gate
+    ✅ Build & Push
+    ✅ Deploy to Kubernetes
+                """.stripIndent()
+            )
+            }
+            failure {
+                echo 'Pipeline echoue — consultez les logs Jenkins.'
+                mail(
+                to: 'seydinalimamoulayeyade@gmail.com',
+                subject: "❌ [Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} — FAILURE",
+                body: """
+    Pipeline échoué — intervention requise.
+
+    Projet   : ${env.JOB_NAME}
+    Build    : #${env.BUILD_NUMBER}
+    Durée    : ${currentBuild.durationString}
+    Lien     : ${env.BUILD_URL}
+
+    Consultez les logs pour identifier le stage en erreur.
+                """.stripIndent()
+            )
+            }
+            unstable {
+                mail(
+                to: 'seydinalimamoulayeyade@gmail.com',
+                subject: "⚠️ [Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} — UNSTABLE",
+                body: """
+    Pipeline instable — certains tests ont échoué.
+
+    Projet   : ${env.JOB_NAME}
+    Build    : #${env.BUILD_NUMBER}
+    Durée    : ${currentBuild.durationString}
+    Lien     : ${env.BUILD_URL}
+                """.stripIndent()
+            )
         }
     }
 }
