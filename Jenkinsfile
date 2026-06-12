@@ -198,7 +198,7 @@ pipeline {
             echo "Pipeline reussi — tag: ${env.IMAGE_TAG} deploye sur K8s"
             mail(
             to: 'seydinalimamoulayeyade@gmail.com',
-            subject: "✅ [Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} — SUCCESS",
+            subject: "[Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} — SUCCESS",
             body: """
     Pipeline terminé avec succès.
 
@@ -239,7 +239,7 @@ pipeline {
             unstable {
                 mail(
                 to: 'seydinalimamoulayeyade@gmail.com',
-                subject: "⚠️ [Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} — UNSTABLE",
+                subject: "[Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} — UNSTABLE",
                 body: """
     Pipeline instable — certains tests ont échoué.
 
