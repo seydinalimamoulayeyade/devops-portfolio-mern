@@ -1,0 +1,88 @@
+# environments/prod/terraform.tfvars.example
+# Configuration pour l'environnement de PRODUCTION
+
+# ⚠️ ATTENTION: Ce fichier contient des exemples pour la production
+# Ne JAMAIS commiter le fichier terraform.tfvars avec les vraies valeurs
+
+# ══════════════════════════════════════════════════════════════════════════════
+# KUBERNETES CONFIG
+# ══════════════════════════════════════════════════════════════════════════════
+
+kubeconfig_path = "~/.kube/config"
+kube_context    = "production-cluster"  # Contexte K8s de production
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PROJECT CONFIG
+# ══════════════════════════════════════════════════════════════════════════════
+
+namespace_name = "devops-portfolio"
+environment    = "prod"
+project_name   = "devops-portfolio-mern"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECRETS (REQUIS - Générer des valeurs TRÈS fortes pour production!)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Générer avec: openssl rand -base64 48
+jwt_secret      = "CHANGEME-prod-jwt-secret-MINIMUM-32-caracteres-OBLIGATOIRE"
+
+# Générer avec: openssl rand -base64 24
+mongo_password  = "CHANGEME-prod-mongo-password-MINIMUM-16-caracteres"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MONGODB
+# ══════════════════════════════════════════════════════════════════════════════
+
+mongo_image              = "mongo:7"
+mongo_database           = "filrouge"  # Base de production
+mongo_replicas           = 1
+enable_mongo_persistence = true
+mongo_storage_size       = "5Gi"  # Plus grand pour production
+# mongo_storage_class    = "fast-ssd"  # Utiliser un storage performant
+
+# ══════════════════════════════════════════════════════════════════════════════
+# BACKEND
+# ══════════════════════════════════════════════════════════════════════════════
+
+backend_image    = "lims4/devops-portfolio-mern-backend:v1.0.0"  # Tag versionné!
+backend_replicas = 2  # Minimum 2 pour HA
+node_env         = "production"
+
+# Resources augmentées pour production
+backend_cpu_request    = "200m"
+backend_cpu_limit      = "1000m"
+backend_memory_request = "256Mi"
+backend_memory_limit   = "1Gi"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# FRONTEND
+# ══════════════════════════════════════════════════════════════════════════════
+
+frontend_image    = "lims4/devops-portfolio-mern-frontend:v1.0.0"  # Tag versionné!
+frontend_nodeport = 30080
+frontend_replicas = 2  # Minimum 2 pour HA
+vite_api_url      = "/api"
+
+frontend_cpu_request    = "100m"
+frontend_cpu_limit      = "500m"
+frontend_memory_request = "128Mi"
+frontend_memory_limit   = "512Mi"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# COMMON
+# ══════════════════════════════════════════════════════════════════════════════
+
+common_labels = {
+  "team"        = "devops"
+  "cost-center" = "production"
+  "owner"       = "seydina-laye"
+}
+
+enable_monitoring = true  # Activer Prometheus
+
+# ══════════════════════════════════════════════════════════════════════════════
+# RESOURCE MANAGEMENT
+# ══════════════════════════════════════════════════════════════════════════════
+
+enable_resource_quota = true
+enable_limit_range    = true

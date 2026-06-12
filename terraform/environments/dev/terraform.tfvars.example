@@ -1,0 +1,73 @@
+# environments/dev/terraform.tfvars.example
+# Configuration pour l'environnement de développement
+
+# ══════════════════════════════════════════════════════════════════════════════
+# KUBERNETES CONFIG
+# ══════════════════════════════════════════════════════════════════════════════
+
+kubeconfig_path = "~/.kube/config"
+kube_context    = "docker-desktop"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PROJECT CONFIG
+# ══════════════════════════════════════════════════════════════════════════════
+
+namespace_name = "devops-portfolio-dev"
+environment    = "dev"
+project_name   = "devops-portfolio-mern"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SECRETS (REQUIS - Générer des valeurs fortes)
+# ══════════════════════════════════════════════════════════════════════════════
+
+jwt_secret      = "CHANGEME-dev-jwt-secret-minimum-32-caracteres"
+mongo_password  = "CHANGEME-dev-mongo-password"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MONGODB
+# ══════════════════════════════════════════════════════════════════════════════
+
+mongo_image              = "mongo:7"
+mongo_database           = "filrouge-dev"
+mongo_replicas           = 1
+enable_mongo_persistence = true
+mongo_storage_size       = "1Gi"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# BACKEND
+# ══════════════════════════════════════════════════════════════════════════════
+
+backend_image   = "lims4/devops-portfolio-mern-backend:latest"
+backend_replicas = 1
+node_env        = "development"
+
+# Resources limitées pour dev
+backend_cpu_request    = "50m"
+backend_cpu_limit      = "250m"
+backend_memory_request = "64Mi"
+backend_memory_limit   = "256Mi"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# FRONTEND
+# ══════════════════════════════════════════════════════════════════════════════
+
+frontend_image    = "lims4/devops-portfolio-mern-frontend:latest"
+frontend_nodeport = 30080
+frontend_replicas = 1
+vite_api_url      = "/api"
+
+frontend_cpu_request    = "25m"
+frontend_cpu_limit      = "100m"
+frontend_memory_request = "32Mi"
+frontend_memory_limit   = "128Mi"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# COMMON
+# ══════════════════════════════════════════════════════════════════════════════
+
+common_labels = {
+  "team"        = "devops"
+  "cost-center" = "development"
+}
+
+enable_monitoring = false
