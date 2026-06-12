@@ -131,10 +131,32 @@ Browser :3000 ────► │  frontend-service (NodePort :30080)       │
 
 ---
 
+## 📚 Documentation
+
+Toute la documentation DevOps est centralisée dans le dossier [`docs/`](docs/) :
+
+- **[docs/README.md](docs/README.md)** - Vue d'ensemble et index
+- **[docs/01-DOCKER.md](docs/01-DOCKER.md)** - Conteneurisation et Docker Compose
+- **[docs/02-JENKINS.md](docs/02-JENKINS.md)** - Pipeline CI/CD automatisé
+- **[docs/03-SONARQUBE.md](docs/03-SONARQUBE.md)** - Analyse qualité de code
+- **[docs/04-KUBERNETES.md](docs/04-KUBERNETES.md)** - Orchestration de conteneurs
+- **[docs/05-TERRAFORM.md](docs/05-TERRAFORM.md)** - Infrastructure as Code
+
 ## Structure du projet
 
 ```
 devops-portfolio-mern/
+├── backend/                     # API Node.js / Express
+│   ├── src/
+│   │   ├── __tests__/           # Tests Jest (59 tests, 5 suites)
+│   │   ├── config/              # Connexion MongoDB
+│   │   ├── controllers/         # Logique métier
+│   │   ├── middleware/          # Auth, upload
+│   │   ├── models/              # Schémas Mongoose
+│   │   └── routes/              # Endpoints REST
+│   ├── Dockerfile
+│   └── package.json
+│
 ├── frontend/                    # Application React (Vite)
 │   ├── src/
 │   │   ├── components/          # Composants UI réutilisables
@@ -145,23 +167,8 @@ devops-portfolio-mern/
 │   ├── .dockerignore
 │   ├── Dockerfile               # Multi-stage build (Node.js → Nginx)
 │   └── package.json
-├── backend/                     # API Node.js / Express
-│   ├── src/
-│   │   ├── __tests__/           # Tests Jest (59 tests, 5 suites)
-│   │   │   ├── utils.test.js
-│   │   │   ├── authMiddleware.test.js
-│   │   │   ├── health.test.js
-│   │   │   ├── auth.test.js
-│   │   │   └── projects.test.js
-│   │   ├── config/              # Connexion MongoDB
-│   │   ├── controllers/         # Logique métier
-│   │   ├── middleware/          # Auth, upload
-│   │   ├── models/              # Schémas Mongoose
-│   │   └── routes/              # Endpoints REST
-│   ├── .dockerignore
-│   ├── Dockerfile
-│   └── package.json
-├── k8s/                         # Manifests Kubernetes
+│
+├── k8s/                         # Manifests Kubernetes (legacy)
 │   ├── namespace.yaml
 │   ├── secret.yaml
 │   ├── configmap.yaml
@@ -176,6 +183,43 @@ devops-portfolio-mern/
 │   └── frontend/
 │       ├── deployment.yaml
 │       └── service.yaml
+│
+├── terraform/                   # Infrastructure as Code (IaC)
+│   ├── environments/
+│   │   ├── dev/                 # Environnement développement
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── terraform.tfvars.example
+│   │   └── prod/                # Environnement production
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       ├── outputs.tf
+│   │       └── terraform.tfvars.example
+│   ├── modules/
+│   │   ├── namespace/           # Module Kubernetes namespace
+│   │   ├── mongodb/             # Module MongoDB
+│   │   ├── backend/             # Module Backend API
+│   │   └── frontend/            # Module Frontend React
+│   ├── README.md
+│   ├── QUICKSTART.md
+│   └── ARCHITECTURE.md
+│
+├── monitoring/                  # Monitoring (à venir)
+│   ├── prometheus/
+│   └── grafana/
+│
+├── scripts/                     # Scripts utilitaires
+│   ├── start-devops.sh          # Démarrage infra locale
+│   └── README.md
+│
+├── docs/                        # Documentation
+│   ├── README.md                # Index général
+│   ├── 01-DOCKER.md
+│   ├── 02-JENKINS.md
+│   ├── 03-SONARQUBE.md
+│   ├── 04-KUBERNETES.md
+│   └── 05-TERRAFORM.md
 ├── docker-compose.yml           # Stack applicative locale
 ├── docker-compose.sonar.yml     # Infrastructure SonarQube + PostgreSQL
 ├── Jenkinsfile                  # Pipeline CI/CD 6 stages
@@ -358,7 +402,7 @@ kubectl get pods -n devops-portfolio                                    # Vérif
 | 2 | Jenkins — Pipeline CI/CD | ✅ Complété |
 | 3 | SonarQube + Tests Jest | ✅ Complété |
 | 4 | Kubernetes | ✅ Complété |
-| 5 | Terraform — Infrastructure as Code | 🔜 À venir |
+| 5 | Terraform — Infrastructure as Code | ✅ Complété |
 | 6 | Prometheus / Grafana — Monitoring | 🔜 À venir |
 | 7 | Trivy — Scan de sécurité | 🔜 À venir |
 | 8 | Outils IA pour DevOps | 🔜 À venir |
