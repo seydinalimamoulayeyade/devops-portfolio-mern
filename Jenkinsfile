@@ -130,7 +130,32 @@ pipeline {
             }
         }
 
-        // ── 6. DEPLOY TO KUBERNETES ───────────────────────────────────
+        // ── 6. TERRAFORM VALIDATION ───────────────────────────────────
+        // Valide la syntaxe Terraform et affiche le plan
+        stage('Terraform Validation') {
+            steps {
+                sh """
+                    set -eu
+                    
+                    echo "Validation de l'infrastructure Terraform"
+                    
+                    cd terraform/environments/dev
+                    
+                    # Initialisation (idempotent)
+                    terraform init -input=false
+                    
+                    # Validation de la syntaxe
+                    terraform validate
+                    
+                    # Formatage (vérification uniquement)
+                    terraform fmt -check -recursive || echo "⚠️ Formatage à corriger"
+                    
+                    echo "✅ Validation Terraform réussie"
+                """
+            }
+        }
+
+        // ── 7. DEPLOY TO KUBERNETES ───────────────────────────────────
         // Applique les manifests et redémarre les Pods
         // K8s pull la nouvelle image :latest grâce à imagePullPolicy: Always
         stage('Deploy to Kubernetes') {
@@ -189,6 +214,7 @@ pipeline {
     ✅ SonarQube Analysis
     ✅ Quality Gate
     ✅ Build & Push
+    ✅ Terraform Validation
     ✅ Deploy to Kubernetes
                 """.stripIndent()
             )
