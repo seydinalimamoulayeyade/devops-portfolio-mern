@@ -21,9 +21,9 @@ output "backend_service_name" {
   value       = module.backend.service_name
 }
 
-output "backend_service_url" {
-  description = "URL interne du backend"
-  value       = module.backend.service_url
+output "backend_api_url" {
+  description = "URL interne de l'API backend"
+  value       = module.backend.api_url
 }
 
 output "backend_replicas" {
