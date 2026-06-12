@@ -5,14 +5,14 @@ import NotFound from "./components/NotFound";
 import PrivateRoute from "./components/PrivateRoute";
 import AjouterProjet from "./pages/AjouterProjet";
 import DetaillerProjet from "./pages/DetaillerProjet";
-import HomePage from "./pages/HomePage";
+import NewHomePage from "./pages/NewHomePage";
 import Login from "./pages/Login";
 
 export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<NewHomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/projets" element={<Dossier />} />
 

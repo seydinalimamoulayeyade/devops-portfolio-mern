@@ -48,88 +48,96 @@ export default function Login() {
   }
 
   return (
-    <section className="motion-fade-up mx-auto max-w-5xl overflow-hidden rounded-lg border border-slate-800 bg-slate-900/85 shadow-2xl shadow-slate-950/30 sm:mt-10">
+    <section className="motion-fade-up mx-auto max-w-6xl overflow-hidden rounded-2xl border border-purple-500/20 bg-slate-900/40 shadow-2xl shadow-purple-950/30 backdrop-blur-xl sm:mt-10">
       <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="relative overflow-hidden border-b border-slate-800 bg-slate-950 p-5 sm:p-8 lg:border-b-0 lg:border-r">
+        <div className="relative overflow-hidden border-b border-purple-500/20 bg-slate-950 p-6 sm:p-10 lg:border-b-0 lg:border-r">
           <div
-            className="absolute inset-0 opacity-50"
+            className="absolute inset-0 opacity-30"
             style={{ backgroundImage: "url('/images/pipeline-cicd.jpg')" }}
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950/92 to-slate-950/65" />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-purple-950/50 to-slate-950/80" />
 
           <div className="relative space-y-8">
             <div>
-              <p className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-300 sm:text-sm sm:tracking-[0.3em]">
-                Console admin
-              </p>
-              <h1 className="mt-3 text-balance text-2xl font-bold leading-tight text-white sm:text-3xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-2">
+                <span className="text-sm font-semibold text-cyan-300">Console admin</span>
+              </div>
+              <h1 className="text-balance text-3xl font-bold leading-tight text-white sm:text-4xl">
                 Accès sécurisé aux livrables DevOps.
               </h1>
-              <p className="mt-3 text-sm leading-7 text-slate-400">
+              <p className="mt-4 text-base leading-relaxed text-slate-300">
                 Connectez-vous pour publier, modifier et maintenir les projets MERN, Laravel et AWS du portfolio.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               {accessChecks.map(([title, value], index) => (
                 <div
                   key={title}
-                  className="motion-fade-up rounded-lg border border-slate-800 bg-slate-950/75 p-4"
+                  className="motion-fade-up rounded-xl border border-purple-500/20 bg-slate-900/50 p-5 backdrop-blur-sm"
                   style={{ "--motion-delay": `${index * 90}ms` }}
                 >
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                     {title}
                   </p>
-                  <p className="mt-2 font-mono text-sm text-cyan-200">{value}</p>
+                  <p className="mt-2 font-mono text-base text-cyan-300">{value}</p>
                 </div>
               ))}
             </div>
 
-            <div className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 p-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-emerald-200">
-                <span className="motion-status-dot h-2 w-2 rounded-full bg-current text-emerald-300" />
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-5 backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-sm font-semibold text-emerald-300">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
                 Stack prête
               </div>
-              <p className="mt-2 text-sm leading-6 text-emerald-100/70">
+              <p className="mt-3 text-sm leading-relaxed text-emerald-200/90">
                 Le backend répond, signe les sessions avec JWT et documente le socle DevOps du portfolio.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="p-5 sm:p-8">
-          <div className="mb-6 space-y-2">
-            <p className="text-xs font-mono uppercase tracking-[0.2em] text-rose-300 sm:text-sm sm:tracking-[0.3em]">
-              Authentification
-            </p>
-            <h2 className="text-2xl font-bold text-white sm:text-3xl">Connexion</h2>
-            <p className="text-sm leading-6 text-slate-400">
+        <div className="p-6 sm:p-10">
+          <div className="mb-8 space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/20 bg-pink-500/10 px-4 py-2">
+              <span className="text-sm font-semibold text-pink-300">Authentification</span>
+            </div>
+            <h2 className="text-3xl font-bold text-white sm:text-4xl">Connexion</h2>
+            <p className="text-base text-slate-400">
               Session protégée pour gérer les projets.
             </p>
           </div>
 
           {error ? (
-            <div className="mb-4 rounded-lg border border-red-800 bg-red-950/30 px-4 py-3">
-              <p className="text-sm text-red-400">{error}</p>
+            <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 backdrop-blur-sm">
+              <div className="flex items-start gap-3">
+                <svg className="h-5 w-5 shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-red-300">{error}</p>
+              </div>
             </div>
           ) : null}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="mb-2 block text-sm text-slate-300">Email</label>
+              <label className="mb-2 block text-sm font-medium text-slate-300">Email</label>
               <input
                 type="email"
                 placeholder="admin@test.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-600 focus:border-cyan-300"
+                className="w-full rounded-xl border border-purple-500/30 bg-slate-900/50 px-4 py-3 text-sm text-white outline-none backdrop-blur-sm transition-colors placeholder:text-slate-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
                 required
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-slate-300">
                 Mot de passe
               </label>
               <input
@@ -138,7 +146,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-600 focus:border-cyan-300"
+                className="w-full rounded-xl border border-purple-500/30 bg-slate-900/50 px-4 py-3 text-sm text-white outline-none backdrop-blur-sm transition-colors placeholder:text-slate-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
                 required
               />
             </div>
@@ -146,17 +154,27 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-rose-500 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/30 transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
             >
-              {loading ? "Connexion en cours..." : "Ouvrir la console"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                  Connexion en cours...
+                </span>
+              ) : (
+                "Ouvrir la console"
+              )}
             </button>
           </form>
 
-          <div className="mt-6 border-t border-slate-800 pt-5">
+          <div className="mt-8 border-t border-purple-500/20 pt-6">
             <Link
               to="/projets"
-              className="text-sm text-slate-400 transition-colors hover:text-cyan-200"
+              className="inline-flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-cyan-300"
             >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
               Voir les projets publics
             </Link>
           </div>

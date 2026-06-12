@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 export default function Layout() {
   return (
@@ -14,29 +15,7 @@ export default function Layout() {
           <Outlet />
         </main>
 
-        <footer className="border-t border-slate-800/80 bg-slate-950/80">
-          <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 text-sm text-slate-400 sm:px-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-300">
-                Cloud & DevOps
-              </p>
-              <p className="mt-2">
-                Stack MERN/Laravel, pipelines Jenkins, conteneurs Docker et déploiements AWS.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {["Docker", "Jenkins", "AWS", "Trivy"].map((item) => (
-                <span
-                  key={item}
-                  className="rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-2 text-xs text-slate-300"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </div>
   );
