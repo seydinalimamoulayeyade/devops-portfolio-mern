@@ -136,21 +136,21 @@ pipeline {
             steps {
                 sh """
                     set -eu
-                    
+
                     echo "Validation de l'infrastructure Terraform"
-                    
+
                     cd terraform/environments/dev
-                    
+
                     # Initialisation (idempotent)
                     terraform init -input=false
-                    
+
                     # Validation de la syntaxe
                     terraform validate
-                    
+
                     # Formatage (vérification uniquement)
-                    terraform fmt -check -recursive || echo "⚠️ Formatage à corriger"
-                    
-                    echo "✅ Validation Terraform réussie"
+                    terraform fmt -check -recursive || echo "Formatage à corriger"
+
+                    echo "Validation Terraform réussie"
                 """
             }
         }
@@ -209,13 +209,13 @@ pipeline {
     Lien     : ${env.BUILD_URL}
 
     Stages exécutés :
-    ✅ Checkout
-    ✅ Backend Tests
-    ✅ SonarQube Analysis
-    ✅ Quality Gate
-    ✅ Build & Push
-    ✅ Terraform Validation
-    ✅ Deploy to Kubernetes
+    Checkout
+     Backend Tests
+     SonarQube Analysis
+     Quality Gate
+     Build & Push
+     Terraform Validation
+     Deploy to Kubernetes
                 """.stripIndent()
             )
         }
@@ -223,7 +223,7 @@ pipeline {
                 echo 'Pipeline echoue — consultez les logs Jenkins.'
                 mail(
                 to: 'seydinalimamoulayeyade@gmail.com',
-                subject: "❌ [Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} — FAILURE",
+                subject: "[Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} — FAILURE",
                 body: """
     Pipeline échoué — intervention requise.
 
