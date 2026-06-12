@@ -1,188 +1,160 @@
+import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
-function getNavLinkClass({ isActive }) {
-  return `inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
-    isActive
-      ? "border border-rose-400/25 bg-rose-500/10 text-rose-300 shadow-[0_0_24px_rgba(244,63,94,0.08)]"
-      : "text-slate-300 hover:bg-white/5 hover:text-white"
-  }`;
-}
-
 export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
   const { isAuthenticated, isAdmin, logout } = useAuth();
 
-  function handleLogout() {
-    logout();
-    setMenuOpen(false);
-  }
+  const navigation = [
+    { name: "Home", href: "/" },
+    { name: "Projects", href: "/projets" },
+    ...(isAdmin ? [{ name: "Add Project", href: "/ajouter" }] : []),
+  ];
 
-  function closeMenu() {
-    setMenuOpen(false);
-  }
+  const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/82 backdrop-blur-xl">
-      <div className="mx-auto flex h-[72px] max-w-5xl items-center justify-between px-4 sm:px-6">
-        <Link
-          to="/"
-          onClick={closeMenu}
-          className="group inline-flex items-center gap-3"
-          aria-label="Retour à l'accueil"
-        >
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/10 font-mono text-xs font-bold text-cyan-200 transition-colors group-hover:border-cyan-300/50">
-            SY
-          </span>
-          <span>
-            <span className="block font-mono text-sm font-semibold tracking-[0.2em] text-white">
-              SLLY
+    <nav className="fixed top-0 z-50 w-full border-b border-purple-500/10 bg-slate-900/80 backdrop-blur-xl">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-10">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="group flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 font-bold text-white shadow-lg shadow-purple-500/50 transition-transform group-hover:scale-110">
+              SY
+            </div>
+            <span className="hidden text-lg font-bold text-white sm:block">
+              Seydina <span className="gradient-text">Yade</span>
             </span>
-            <span className="hidden text-xs text-slate-500 sm:block">
-              AWS & DevOps developer
-            </span>
-          </span>
-        </Link>
+          </Link>
 
-        <div className="hidden items-center gap-2 md:flex">
-          <NavLink to="/" end className={getNavLinkClass}>
-            Accueil
-          </NavLink>
-          <NavLink to="/projets" className={getNavLinkClass}>
-            Projets
-          </NavLink>
-          {isAdmin ? (
-            <NavLink to="/ajouter" className={getNavLinkClass}>
-              Ajouter
-            </NavLink>
-          ) : null}
-        </div>
-
-        <div className="hidden items-center gap-3 md:flex">
-          {isAdmin ? (
-            <span className="inline-flex items-center gap-2 rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-3 py-2 text-xs font-medium text-cyan-200">
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-3.5 w-3.5"
+          {/* Desktop Navigation */}
+          <div className="hidden items-center gap-6 md:flex">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`relative px-3 py-2 text-sm font-medium transition-colors ${
+                  isActive(item.href)
+                    ? "text-purple-400"
+                    : "text-slate-300 hover:text-white"
+                }`}
               >
-                <path d="M12 3 20 7v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4Z" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-              Admin
-            </span>
-          ) : isAuthenticated ? (
-            <span className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-medium text-slate-300">
-              Connecte
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs font-medium text-emerald-300">
-              <span className="motion-status-dot h-2 w-2 rounded-full bg-current text-emerald-300" />
-              Disponible
-            </span>
-          )}
+                {item.name}
+                {isActive(item.href) && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500" />
+                )}
+              </Link>
+            ))}
+          </div>
 
-          {!isAuthenticated ? (
-            <Link
-              to="/login"
-              className="inline-flex items-center rounded-lg border border-slate-700 px-5 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:border-rose-400 hover:text-white"
-            >
-              Connexion
-            </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center rounded-lg bg-rose-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-rose-600"
-            >
-              Déconnexion
-            </button>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setMenuOpen((open) => !open)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-700 text-slate-200 transition-colors hover:border-rose-400 hover:text-white md:hidden"
-          aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
-          aria-expanded={menuOpen}
-        >
-          <span className="flex h-5 w-5 flex-col justify-center gap-1.5">
-            <span
-              className={`h-0.5 w-5 rounded-full bg-current transition-transform ${
-                menuOpen ? "translate-y-2 rotate-45" : ""
-              }`}
-            />
-            <span
-              className={`h-0.5 w-5 rounded-full bg-current transition-opacity ${
-                menuOpen ? "opacity-0" : "opacity-100"
-              }`}
-            />
-            <span
-              className={`h-0.5 w-5 rounded-full bg-current transition-transform ${
-                menuOpen ? "-translate-y-2 -rotate-45" : ""
-              }`}
-            />
-          </span>
-        </button>
-      </div>
-
-      {menuOpen ? (
-        <div className="motion-fade-up border-t border-slate-800 bg-slate-950 md:hidden">
-          <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-5 sm:px-6">
-            <NavLink to="/" end onClick={closeMenu} className={getNavLinkClass}>
-              Accueil
-            </NavLink>
-            <NavLink to="/projets" onClick={closeMenu} className={getNavLinkClass}>
-              Projets
-            </NavLink>
+          {/* Auth buttons */}
+          <div className="hidden items-center gap-3 md:flex">
+            {isAdmin && (
+              <span className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300">
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Admin
+              </span>
+            )}
+            
             {isAuthenticated ? (
-              <>
-                {isAdmin ? (
-                  <>
-                    <div className="inline-flex items-center justify-center gap-2 rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-4 py-3 text-sm font-medium text-cyan-200">
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="h-4 w-4"
-                      >
-                        <path d="M12 3 20 7v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7l8-4Z" />
-                        <path d="m9 12 2 2 4-4" />
-                      </svg>
-                      Console admin ouverte
-                    </div>
-                    <NavLink to="/ajouter" onClick={closeMenu} className={getNavLinkClass}>
-                      Ajouter
-                    </NavLink>
-                  </>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="inline-flex items-center justify-center rounded-lg bg-rose-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-600"
-                >
-                  Déconnexion
-                </button>
-              </>
+              <button
+                onClick={logout}
+                className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-300 transition-colors hover:border-red-500/60 hover:bg-red-500/20"
+              >
+                Logout
+              </button>
             ) : (
               <Link
                 to="/login"
-                onClick={closeMenu}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 transition-colors hover:border-rose-400 hover:text-white"
+                className="rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-purple-500/50 transition-transform hover:scale-105"
               >
-                Connexion
+                Login
               </Link>
             )}
           </div>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="rounded-lg border border-purple-500/30 bg-purple-500/10 p-2 text-purple-300 md:hidden"
+          >
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {mobileMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
         </div>
-      ) : null}
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="border-t border-purple-500/10 py-4 md:hidden">
+            <div className="space-y-2">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive(item.href)
+                      ? "bg-purple-500/20 text-purple-300"
+                      : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              {isAuthenticated ? (
+                <>
+                  {isAdmin && (
+                    <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-center text-xs font-semibold text-emerald-300">
+                      Admin Access
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-300"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-3 text-center text-sm font-semibold text-white"
+                >
+                  Login
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </nav>
   );
 }
