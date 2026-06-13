@@ -39,7 +39,20 @@ backend/uploads/*
 *.sln
 *.sw?
 
+# Test coverage
 coverage/
 **/coverage/
-.scannerwork/       ← dossier temporaire créé par sonar-scanner
 *.lcov
+
+# SonarQube
+.scannerwork/
+
+# Documentation temporaire / rapports de build (ne pas exposer publiquement)
+SONAR_QUALITY_REPORT.md
+UI_REFONTE_COMPLETE.md
+BUILD_RESULTS*.md
+TEST_RESULTS*.md
+PROGRESSION_SESSION.md
+
+# Scripts PowerShell sensibles (chemins locaux)
+scripts/*.ps1
