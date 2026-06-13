@@ -61,6 +61,12 @@ resource "kubernetes_deployment_v1" "frontend" {
             protocol       = "TCP"
           }
 
+          # Variable d'environnement pour le nom du service backend
+          env {
+            name  = "BACKEND_HOST"
+            value = var.backend_service_name
+          }
+
           # Environment variables from ConfigMap
           env_from {
             config_map_ref {

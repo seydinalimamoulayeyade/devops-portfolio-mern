@@ -131,8 +131,9 @@ module "frontend" {
   replicas = var.frontend_replicas
 
   # API URLs
-  vite_api_url        = var.vite_api_url
-  backend_service_url = "http://${module.backend.service_name}:${var.backend_port}"
+  vite_api_url         = var.vite_api_url
+  backend_service_url  = "http://${module.backend.service_name}:${var.backend_port}"
+  backend_service_name = module.backend.service_name  # Passer le nom du service backend
 
   # Resources
   cpu_request    = var.frontend_cpu_request

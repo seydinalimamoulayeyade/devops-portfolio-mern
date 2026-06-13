@@ -66,6 +66,12 @@ variable "backend_service_url" {
   type        = string
 }
 
+variable "backend_service_name" {
+  description = "Nom du service backend (pour la variable d'environnement BACKEND_HOST)"
+  type        = string
+  default     = "backend-service"
+}
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # RESOURCES
 # ═══════════════════════════════════════════════════════════════════════════════
