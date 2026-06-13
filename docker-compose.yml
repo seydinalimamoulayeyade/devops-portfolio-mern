@@ -75,6 +75,8 @@ services:
       - mern-network
     ports:
       - "${FRONTEND_PORT:-80}:80"
+    environment:
+      - BACKEND_HOST=backend  # Nom du service backend dans Docker Compose
     depends_on:
       backend:
         condition: service_healthy

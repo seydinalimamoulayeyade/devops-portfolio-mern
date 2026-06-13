@@ -18,9 +18,17 @@ RUN npm run build
 # ── Stage 2 : Production ─────────────────────
 FROM nginx:alpine AS production
 
+# Copier les fichiers build
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copier le template nginx (avec variables)
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+# Définir la valeur par défaut pour BACKEND_HOST (Docker Compose)
+ENV BACKEND_HOST=backend
 
 EXPOSE 80
 
+# Le conteneur nginx:alpine supporte automatiquement /etc/nginx/templates/
+# et fait le remplacement des variables avec envsubst au démarrage
 CMD ["nginx", "-g", "daemon off;"]
