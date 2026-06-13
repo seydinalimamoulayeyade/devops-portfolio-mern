@@ -34,6 +34,9 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 80
+          env:
+            - name: BACKEND_HOST
+              value: "backend-service"  # Nom du service backend dans Kubernetes
           readinessProbe:
             httpGet:
               path: /
