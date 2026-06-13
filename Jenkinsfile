@@ -14,7 +14,7 @@ pipeline {
         FRONTEND_IMAGE    = "${DOCKERHUB_USER}/devops-portfolio-mern-frontend"
         BACKEND_IMAGE     = "${DOCKERHUB_USER}/devops-portfolio-mern-backend"
         SONAR_PROJECT_KEY = 'devops-portfolio-mern'
-        K8S_NAMESPACE     = 'devops-portfolio'
+        K8S_NAMESPACE     = 'devops-portfolio-dev'  // Namespace géré par Terraform
     }
 
     stages {
@@ -156,8 +156,8 @@ pipeline {
         }
 
         // ── 7. DEPLOY TO KUBERNETES ───────────────────────────────────
-        // Applique les manifests et redémarre les Pods
-        // K8s pull la nouvelle image :latest grâce à imagePullPolicy: Always
+        // Redémarre les déploiements pour récupérer les nouvelles images
+        // L'infrastructure K8s est gérée par Terraform, pas par ce pipeline
         stage('Deploy to Kubernetes') {
             steps {
                 sh """
@@ -165,17 +165,7 @@ pipeline {
 
                     echo "Deploiement sur Kubernetes — namespace: \${K8S_NAMESPACE}"
 
-                    # Le namespace est géré manuellement — pas dans le pipeline
-                    # kubectl apply -f k8s/namespace.yaml
-
-                    # Applique les manifests (idempotent)
-                    kubectl apply -f k8s/secret.yaml -n \${K8S_NAMESPACE}
-                    kubectl apply -f k8s/configmap.yaml -n \${K8S_NAMESPACE}
-                    kubectl apply -f k8s/mongo/ -n \${K8S_NAMESPACE}
-                    kubectl apply -f k8s/backend/ -n \${K8S_NAMESPACE}
-                    kubectl apply -f k8s/frontend/ -n \${K8S_NAMESPACE}
-
-                    # Redémarre backend et frontend pour récupérer la nouvelle image
+                    # Redémarre les déploiements pour récupérer la nouvelle image :latest
                     kubectl rollout restart deployment/backend-deployment -n \${K8S_NAMESPACE}
                     kubectl rollout restart deployment/frontend-deployment -n \${K8S_NAMESPACE}
 
