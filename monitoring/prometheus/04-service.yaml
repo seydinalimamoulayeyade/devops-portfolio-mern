@@ -1,0 +1,19 @@
+# Service pour accéder à l'UI de Prometheus.
+# type NodePort => accessible depuis ton navigateur via localhost:30090
+# (pratique sur docker-desktop). En "vrai", on mettrait du ClusterIP + Ingress.
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  type: NodePort
+  selector:
+    app: prometheus      # cible les pods portant le label app=prometheus
+  ports:
+    - name: web
+      port: 9090         # port du Service (interne au cluster)
+      targetPort: 9090   # port du conteneur
+      nodePort: 30090    # port exposé sur le node => http://localhost:30090

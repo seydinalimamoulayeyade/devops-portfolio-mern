@@ -1,0 +1,15 @@
+# Service : adresse stable "kube-state-metrics:8080" pour que Prometheus le scrape.
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+  labels:
+    app: kube-state-metrics
+spec:
+  selector:
+    app: kube-state-metrics
+  ports:
+    - name: metrics
+      port: 8080
+      targetPort: 8080

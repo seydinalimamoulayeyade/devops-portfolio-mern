@@ -1,0 +1,40 @@
+# ConfigMap = le fichier de configuration de Prometheus (prometheus.yml),
+# injecté dans le conteneur. C'est ICI qu'on déclare QUI scraper.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    # ── Paramètres globaux ──────────────────────────────────────────────
+    global:
+      scrape_interval: 15s      # fréquence de scrape par défaut de chaque target
+      evaluation_interval: 15s  # fréquence d'évaluation des règles d'alerte
+
+    # ── scrape_configs : la liste des "jobs" de scrape ──────────────────
+    # Un job regroupe une ou plusieurs targets partageant la même config.
+    scrape_configs:
+      # Job 1 : Prometheus se scrape LUI-MÊME.
+      # C'est la target la plus simple : une cible statique en dur.
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']   # Prometheus écoute sur 9090
+
+      # Job 2 : le node-exporter (les mesures de la machine).
+      # Prometheus le joindra via l'adresse du Service, dans le même namespace.
+      - job_name: 'node-exporter'
+        static_configs:
+          - targets: ['node-exporter:9100']
+
+      # Job 3 : kube-state-metrics (l'état des objets Kubernetes).
+      - job_name: 'kube-state-metrics'
+        static_configs:
+          - targets: ['kube-state-metrics:8080']
+
+      # Job 4 : ton backend applicatif (dans un AUTRE namespace).
+      # Prometheus le joint via le DNS interne : <service>.<namespace>:<port>
+      - job_name: 'backend-app'
+        metrics_path: /metrics
+        static_configs:
+          - targets: ['backend-service.devops-portfolio-dev:5000']

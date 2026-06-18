@@ -1,0 +1,9 @@
+# namespace dédié à toute la stack de monitoring
+# On isole Prometheus/Grafana/Alertmanager du reste de l'application.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    app.kubernetes.io/part-of: monitoring
+    managed-by: kubectl

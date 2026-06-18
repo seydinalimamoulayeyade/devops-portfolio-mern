@@ -1,0 +1,16 @@
+# Service : donne une adresse stable "node-exporter:9100" à l'intérieur du cluster.
+# C'est cette adresse que Prometheus utilisera comme target.
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    app: node-exporter
+spec:
+  selector:
+    app: node-exporter     # pointe vers les pods du DaemonSet
+  ports:
+    - name: metrics
+      port: 9100
+      targetPort: 9100

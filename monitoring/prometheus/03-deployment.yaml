@@ -1,0 +1,54 @@
+# Le Deployment qui fait tourner le serveur Prometheus.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.54.1
+          args:
+            # On pointe Prometheus vers le fichier monté depuis la ConfigMap
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            # Répertoire de stockage de la base de séries temporelles (TSDB)
+            - "--storage.tsdb.path=/prometheus"
+            # Active l'API d'admin (utile pour recharger la config à chaud)
+            - "--web.enable-lifecycle"
+          ports:
+            - name: web
+              containerPort: 9090
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            # 1) la config (lecture seule)
+            - name: config
+              mountPath: /etc/prometheus
+            # 2) le stockage des métriques
+            - name: data
+              mountPath: /prometheus
+      volumes:
+        # La ConfigMap est montée comme un fichier prometheus.yml
+        - name: config
+          configMap:
+            name: prometheus-config
+        # Stockage éphémère pour l'instant (les données disparaissent si le pod
+        # est recréé). On verra la persistance (PVC) dans une étape ultérieure.
+        - name: data
+          emptyDir: {}

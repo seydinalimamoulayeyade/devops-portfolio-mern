@@ -1,0 +1,53 @@
+# node-exporter : le "traducteur" qui expose les mesures de la MACHINE
+# (CPU, RAM, disque, réseau...) sur une porte /metrics au port 9100.
+#
+# DaemonSet = Kubernetes place automatiquement 1 pod node-exporter
+# sur CHAQUE machine (node) du cluster.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    app: node-exporter
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      # hostNetwork/hostPID : le pod "voit" la vraie machine, pas juste son bac à sable,
+      # pour pouvoir mesurer le système hôte.
+      hostNetwork: true
+      hostPID: true
+      containers:
+        - name: node-exporter
+          image: prom/node-exporter:v1.8.2
+          args:
+            # On lui dit où trouver le système de fichiers de la machine (monté en /host)
+            - "--path.rootfs=/host"
+          ports:
+            - name: metrics
+              containerPort: 9100
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "30Mi"
+            limits:
+              cpu: "200m"
+              memory: "100Mi"
+          volumeMounts:
+            - name: rootfs
+              mountPath: /host
+              readOnly: true
+      volumes:
+        # On monte la racine de la machine (en lecture seule) pour lire ses métriques
+        - name: rootfs
+          hostPath:
+            path: /
+      # tolerations : autorise le pod à tourner même sur un node "control-plane"
+      tolerations:
+        - operator: Exists
