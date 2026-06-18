@@ -21,7 +21,19 @@ pipeline {
         // ── 1. CHECKOUT ─────────────────────────────────────────────
         stage('Checkout') {
             steps {
-                checkout scm
+                // Resilience reseau : on relance jusqu'a 3 fois en cas de
+                // coupure passagere, avec un timeout de clone de 20 min.
+                retry(3) {
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: scm.branches,
+                        userRemoteConfigs: scm.userRemoteConfigs,
+                        extensions: scm.extensions + [[
+                            $class: 'CloneOption',
+                            timeout: 20
+                        ]]
+                    ])
+                }
                 script {
                     def shortCommit = sh(
                         script: 'git rev-parse --short HEAD',
@@ -61,16 +73,9 @@ pipeline {
                 withSonarQubeEnv('SonarQube') {
                     script {
                         def scannerHome = tool 'SonarScanner'
-                        sh """
-                            set -eu
-                            ${scannerHome}/bin/sonar-scanner \
-                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                                -Dsonar.sources=backend/src,backend/server.js,frontend/src \
-                                -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**,**/uploads/** \
-                                -Dsonar.sourceEncoding=UTF-8 \
-                                -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info \
-                                -Dsonar.test.inclusions=backend/src/__tests__/**
-                        """
+                        // La configuration (sources, exclusions, coverage...) est
+                        // centralisee dans sonar-project.properties a la racine.
+                        sh "${scannerHome}/bin/sonar-scanner"
                     }
                 }
             }
@@ -96,10 +101,6 @@ pipeline {
                         credentialsId: 'dockerhub-credentials',
                         usernameVariable: 'DOCKER_USER',
                         passwordVariable: 'DOCKER_PASS'
-                    ),
-                    string(
-                        credentialsId: 'jwt-secret',
-                        variable: 'JWT_SECRET_VALUE'
                     )
                 ]) {
                     sh """
@@ -131,10 +132,12 @@ pipeline {
         }
 
         // ── 6. TERRAFORM VALIDATION ───────────────────────────────────
-        // Valide la syntaxe Terraform et affiche le plan
+        // Valide la syntaxe Terraform (init + validate) et controle le formatage.
+        // Pas de "terraform plan" ici : ce stage ne touche pas l'etat.
         stage('Terraform Validation') {
             steps {
-                sh """
+                // init + validate : bloquants (vraie validation de syntaxe)
+                sh '''
                     set -eu
 
                     echo "Validation de l'infrastructure Terraform"
@@ -147,11 +150,18 @@ pipeline {
                     # Validation de la syntaxe
                     terraform validate
 
-                    # Formatage (vérification uniquement)
-                    terraform fmt -check -recursive || echo "Formatage à corriger"
+                    echo "Validation Terraform reussie"
+                '''
 
-                    echo "Validation Terraform réussie"
-                """
+                // Formatage : non conforme => build UNSTABLE (visible), sans bloquer le deploiement
+                catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE',
+                           message: 'Formatage Terraform non conforme (lancez: terraform fmt -recursive)') {
+                    sh '''
+                        set -eu
+                        cd terraform/environments/dev
+                        terraform fmt -check -recursive
+                    '''
+                }
             }
         }
 
@@ -164,6 +174,15 @@ pipeline {
                     set -eu
 
                     echo "Deploiement sur Kubernetes — namespace: \${K8S_NAMESPACE}"
+
+                    # Pre-check : les deploiements doivent exister (crees par Terraform)
+                    for dep in backend-deployment frontend-deployment; do
+                        if ! kubectl get deployment/\$dep -n \${K8S_NAMESPACE} >/dev/null 2>&1; then
+                            echo "ERREUR: deploiement '\$dep' introuvable dans \${K8S_NAMESPACE}."
+                            echo "Lancez d'abord 'terraform apply' pour creer l'infrastructure K8s."
+                            exit 1
+                        fi
+                    done
 
                     # Redémarre les déploiements pour récupérer la nouvelle image :latest
                     kubectl rollout restart deployment/backend-deployment -n \${K8S_NAMESPACE}
