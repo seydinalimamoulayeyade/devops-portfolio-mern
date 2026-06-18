@@ -27,7 +27,7 @@ resource "kubernetes_secret_v1" "mongo" {
 resource "kubernetes_persistent_volume_claim_v1" "mongo" {
   count = var.enable_persistence ? 1 : 0
 
-  wait_until_bound = false  # Ne pas attendre que le PVC soit bound (sera bound quand le Pod démarrera)
+  wait_until_bound = false # Ne pas attendre que le PVC soit bound (sera bound quand le Pod démarrera)
 
   metadata {
     name      = var.pvc_name
@@ -37,7 +37,7 @@ resource "kubernetes_persistent_volume_claim_v1" "mongo" {
 
   spec {
     access_modes = ["ReadWriteOnce"]
-    
+
     resources {
       requests = {
         storage = var.storage_size
@@ -81,8 +81,8 @@ resource "kubernetes_deployment_v1" "mongo" {
 
       spec {
         container {
-          name  = "mongodb"
-          image = var.image
+          name              = "mongodb"
+          image             = var.image
           image_pull_policy = var.image_pull_policy
 
           port {

@@ -13,8 +13,8 @@ resource "kubernetes_config_map_v1" "frontend" {
   }
 
   data = {
-    VITE_API_URL         = var.vite_api_url
-    BACKEND_SERVICE_URL  = var.backend_service_url
+    VITE_API_URL        = var.vite_api_url
+    BACKEND_SERVICE_URL = var.backend_service_url
   }
 }
 

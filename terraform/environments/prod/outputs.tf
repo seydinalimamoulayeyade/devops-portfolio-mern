@@ -67,17 +67,17 @@ output "kubectl_commands" {
 output "deployment_summary" {
   description = "Résumé du déploiement production"
   value = {
-    namespace        = module.namespace.namespace_name
-    environment      = var.environment
-    project          = var.project_name
-    mongodb_image    = var.mongo_image
-    backend_image    = var.backend_image
-    backend_replicas = var.backend_replicas
-    frontend_image   = var.frontend_image
+    namespace         = module.namespace.namespace_name
+    environment       = var.environment
+    project           = var.project_name
+    mongodb_image     = var.mongo_image
+    backend_image     = var.backend_image
+    backend_replicas  = var.backend_replicas
+    frontend_image    = var.frontend_image
     frontend_replicas = var.frontend_replicas
-    persistence      = var.enable_mongo_persistence
-    storage_size     = var.mongo_storage_size
-    monitoring       = var.enable_monitoring
-    quotas_enabled   = var.enable_resource_quota
+    persistence       = var.enable_mongo_persistence
+    storage_size      = var.mongo_storage_size
+    monitoring        = var.enable_monitoring
+    quotas_enabled    = var.enable_resource_quota
   }
 }

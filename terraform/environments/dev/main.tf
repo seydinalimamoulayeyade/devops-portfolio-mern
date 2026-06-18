@@ -10,7 +10,7 @@ module "namespace" {
 
   namespace_name = var.namespace_name
   labels         = local.common_labels
-  
+
   annotations = {
     "description" = "Namespace pour le projet ${var.project_name} - environnement DEV"
     "managed-by"  = "terraform"
@@ -36,12 +36,12 @@ module "mongodb" {
   service_name    = local.mongodb_service_name
   pvc_name        = local.mongodb_pvc_name
   secret_name     = local.mongodb_secret_name
-  
-  image           = var.mongo_image
-  port            = var.mongo_port
-  replicas        = var.mongo_replicas
-  database_name   = var.mongo_database
-  mongo_password  = var.mongo_password
+
+  image          = var.mongo_image
+  port           = var.mongo_port
+  replicas       = var.mongo_replicas
+  database_name  = var.mongo_database
+  mongo_password = var.mongo_password
 
   # Stockage
   enable_persistence = var.enable_mongo_persistence
@@ -82,7 +82,7 @@ module "backend" {
   deployment_name = local.backend_deployment_name
   service_name    = local.backend_service_name
   configmap_name  = local.backend_configmap_name
-  
+
   image    = var.backend_image
   port     = var.backend_port
   replicas = var.backend_replicas
@@ -124,7 +124,7 @@ module "frontend" {
   deployment_name = local.frontend_deployment_name
   service_name    = local.frontend_service_name
   configmap_name  = local.frontend_configmap_name
-  
+
   image    = var.frontend_image
   port     = var.frontend_port
   nodeport = var.frontend_nodeport
@@ -133,7 +133,7 @@ module "frontend" {
   # API URLs
   vite_api_url         = var.vite_api_url
   backend_service_url  = "http://${module.backend.service_name}:${var.backend_port}"
-  backend_service_name = module.backend.service_name  # Passer le nom du service backend
+  backend_service_name = module.backend.service_name # Passer le nom du service backend
 
   # Resources
   cpu_request    = var.frontend_cpu_request

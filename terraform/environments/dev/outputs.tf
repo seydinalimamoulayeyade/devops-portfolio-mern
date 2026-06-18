@@ -44,11 +44,11 @@ output "frontend_access_url" {
 output "kubectl_commands" {
   description = "Commandes kubectl utiles"
   value = {
-    get_all        = "kubectl get all -n ${module.namespace.namespace_name}"
-    get_pods       = "kubectl get pods -n ${module.namespace.namespace_name} -w"
-    logs_backend   = "kubectl logs -n ${module.namespace.namespace_name} deployment/${module.backend.deployment_name} -f"
-    logs_frontend  = "kubectl logs -n ${module.namespace.namespace_name} deployment/${module.frontend.deployment_name} -f"
-    port_forward   = "kubectl port-forward -n ${module.namespace.namespace_name} service/${module.frontend.service_name} 3000:80"
+    get_all       = "kubectl get all -n ${module.namespace.namespace_name}"
+    get_pods      = "kubectl get pods -n ${module.namespace.namespace_name} -w"
+    logs_backend  = "kubectl logs -n ${module.namespace.namespace_name} deployment/${module.backend.deployment_name} -f"
+    logs_frontend = "kubectl logs -n ${module.namespace.namespace_name} deployment/${module.frontend.deployment_name} -f"
+    port_forward  = "kubectl port-forward -n ${module.namespace.namespace_name} service/${module.frontend.service_name} 3000:80"
   }
 }
 

@@ -41,17 +41,17 @@ resource "kubernetes_limit_range_v1" "namespace_limits" {
   spec {
     limit {
       type = "Container"
-      
+
       default = {
         cpu    = var.default_cpu_limit
         memory = var.default_memory_limit
       }
-      
+
       default_request = {
         cpu    = var.default_cpu_request
         memory = var.default_memory_request
       }
-      
+
       max = {
         cpu    = var.max_cpu
         memory = var.max_memory
