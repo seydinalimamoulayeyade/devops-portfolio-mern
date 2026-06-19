@@ -12,6 +12,11 @@ data:
       scrape_interval: 15s      # fréquence de scrape par défaut de chaque target
       evaluation_interval: 15s  # fréquence d'évaluation des règles d'alerte
 
+    # ── Fichiers de règles d'alerte ─────────────────────────────────────
+    # Prometheus chargera tous les fichiers .yml de ce dossier (monté depuis un ConfigMap).
+    rule_files:
+      - /etc/prometheus/rules/*.yml
+
     # ── scrape_configs : la liste des "jobs" de scrape ──────────────────
     # Un job regroupe une ou plusieurs targets partageant la même config.
     scrape_configs:

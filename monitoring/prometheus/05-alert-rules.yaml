@@ -1,0 +1,50 @@
+# ConfigMap contenant les RÈGLES D'ALERTE de Prometheus.
+# Monté dans le conteneur sous /etc/prometheus/rules/
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alert-rules
+  namespace: monitoring
+data:
+  alert.rules.yml: |
+    groups:
+      # Un "group" regroupe des règles évaluées ensemble.
+      - name: exemples-alertes
+        rules:
+
+          # ── Alerte 1 : une target ne répond plus ────────────────────────
+          # up == 0 signifie "Prometheus n'arrive plus à scraper cette cible".
+          # for: 1m => il faut que ce soit vrai pendant 1 minute avant de firing.
+          - alert: TargetDown
+            expr: up == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Target injoignable : {{ $labels.job }}"
+              description: "La cible {{ $labels.instance }} (job {{ $labels.job }}) ne répond plus depuis 1 minute."
+
+          # ── Alerte 2 : taux d'erreurs 5xx élevé sur le backend ──────────
+          # Part des réponses 5xx sur le total des requêtes du backend.
+          - alert: BackendHighErrorRate
+            expr: |
+              sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total[5m])) > 0.05
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Taux d'erreurs 5xx élevé sur le backend"
+              description: "Plus de 5% des requêtes renvoient une erreur serveur depuis 2 minutes."
+
+          # ── Alerte 3 : mémoire de la machine presque pleine ─────────────
+          - alert: HighNodeMemory
+            expr: |
+              (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 90
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Mémoire machine > 90%"
+              description: "La RAM utilisée dépasse 90% depuis 5 minutes sur {{ $labels.instance }}."
