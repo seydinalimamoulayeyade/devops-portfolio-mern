@@ -137,6 +137,37 @@
           "legendFormat": "erreurs 5xx %"
         }
       ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Tentatives de connexion par resultat (cumul)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 25 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (result) (auth_login_attempts_total)",
+          "legendFormat": "{{result}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Projets crees (cumul)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 25 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" } } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(projects_created_total)"
+        }
+      ]
     }
   ]
 }
