@@ -1,30 +1,27 @@
 # Scripts utilitaires
 
-Scripts shell pour automatiser les tâches DevOps courantes.
+Scripts d'automatisation pour l'environnement DevOps **local**.
 
-## Scripts disponibles
+## `start-devops.sh`
 
-### start-devops.sh
-Script de démarrage de l'infrastructure DevOps locale.
+Bootstrap de l'environnement local après un redémarrage machine.
 
-**Utilisation** :
 ```bash
-./scripts/start-devops.sh
+./scripts/start-devops.sh   # exécutable depuis n'importe quel répertoire
 ```
 
-**Ce qu'il fait** :
-- Démarre Jenkins
-- Lance SonarQube + PostgreSQL
-- Configure ngrok pour les webhooks GitHub (si nécessaire)
-- Affiche le statut des services
+**Ce qu'il fait :**
+1. Vérifie que Docker Desktop est lancé.
+2. Démarre le conteneur **Jenkins**.
+3. Démarre **SonarQube** (`docker-compose.sonar.yml`).
+4. Met à jour le kubeconfig dans Jenkins (accès au cluster depuis le conteneur).
+5. Déploie l'application via **Terraform** (`terraform/environments/dev`, namespace `devops-portfolio-dev`) si les pods ne tournent pas déjà.
 
-## Ajouter un script
+> Prérequis pour l'étape 5 : `terraform/environments/dev/terraform.tfvars` doit exister
+> (copié depuis `terraform.tfvars.example`). Sinon l'étape est ignorée avec un avertissement.
 
-Pour ajouter un nouveau script utilitaire :
-1. Créer le fichier dans ce dossier
-2. Le rendre exécutable : `chmod +x scripts/mon-script.sh`
-3. Documenter son utilisation ici
+> Le déclenchement du pipeline Jenkins se fait par **polling Git** (pas de webhook externe requis).
 
-## Scripts backend
+## Note
 
-Les scripts spécifiques au backend (comme `seedAdmin.js`) restent dans `backend/scripts/`.
+Les scripts spécifiques au backend (ex. `seedAdmin.js`) restent dans `backend/scripts/`.
