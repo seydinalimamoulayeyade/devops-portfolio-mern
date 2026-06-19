@@ -17,6 +17,12 @@ data:
     rule_files:
       - /etc/prometheus/rules/*.yml
 
+    # ── alerting : où Prometheus pousse les alertes "firing" ────────────
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: ['alertmanager:9093']
+
     # ── scrape_configs : la liste des "jobs" de scrape ──────────────────
     # Un job regroupe une ou plusieurs targets partageant la même config.
     scrape_configs:
