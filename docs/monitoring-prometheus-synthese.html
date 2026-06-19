@@ -162,6 +162,9 @@ kubectl exec -n monitoring deploy/prometheus -- wget -qO- http://localhost:9090/
   <tr><td>Cardinalité des labels</td><td>Utiliser le <em>motif</em> de route (<code>/:id</code>) plutôt que l'URL exacte, sinon explosion du nombre de séries.</td></tr>
   <tr><td>Stockage <code>emptyDir</code></td><td>Les données Prometheus sont perdues si le pod est recréé. Pour de la persistance : un PVC (étape ultérieure).</td></tr>
   <tr><td>Secret SMTP</td><td>Ne jamais mettre un mot de passe dans un ConfigMap/Git. Secret K8s + montage fichier.</td></tr>
+  <tr><td>Saturation du cluster mono-node</td><td>Ajouter toute la stack monitoring sature un node unique (pods <code>Pending</code> faute de CPU, Mongo tué par OOM). Réduire les <code>requests</code> CPU et utiliser <code>strategy: Recreate</code> (évite d'héberger 2 pods en même temps lors d'un redéploiement).</td></tr>
+  <tr><td>Stateful + PVC ReadWriteOnce</td><td>Pour une base (Mongo) avec volume RWO, <code>RollingUpdate</code> provoque un deadlock (le nouveau pod ne peut pas monter le volume tenu par l'ancien). <code>strategy: Recreate</code> est indispensable.</td></tr>
+  <tr><td>Une métrique « vide » a révélé un vrai bug</td><td>L'absence de <code>auth_login_attempts_total</code> a permis de découvrir que l'app ne pouvait pas lire MongoDB (URI sans identifiants alors que l'auth était activée). C'est le but de l'observabilité : rendre visible l'invisible.</td></tr>
 </table>
 
 <h2>8. Glossaire express</h2>
@@ -182,11 +185,6 @@ kubectl exec -n monitoring deploy/prometheus -- wget -qO- http://localhost:9090/
   <li><strong>Service discovery</strong> : remplacer les targets statiques par la découverte automatique des pods K8s.</li>
   <li><strong>Industrialisation</strong> : déployer la stack via Terraform (provider Helm) pour rester cohérent avec l'IaC du projet.</li>
 </ul>
-
-<footer>
-  Document généré pour le projet DevOps Portfolio MERN — Seydina Limamou Laye Yade.
-  Code et manifests : dossier <code>monitoring/</code> du dépôt.
-</footer>
 
 </body>
 </html>

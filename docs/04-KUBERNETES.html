@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Kubernetes - Orchestration de Conteneurs</title>
+<style>
+  :root { --bleu:#1f6feb; --orange:#e6522c; --gris:#444; --gris-clair:#f5f6f8; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+         color:#1b1f24; line-height:1.55; max-width: 880px; margin: 0 auto; padding: 32px; }
+  h1 { color: var(--orange); font-size: 27px; border-bottom: 3px solid var(--orange); padding-bottom: 8px; }
+  h2 { color: var(--bleu); font-size: 20px; margin-top: 30px; border-bottom: 1px solid #d0d7de; padding-bottom: 4px; }
+  h3 { color: var(--gris); font-size: 16px; margin-top: 18px; }
+  p, li { font-size: 14.5px; }
+  a { color: var(--bleu); }
+  code { background: var(--gris-clair); padding: 1px 5px; border-radius: 4px;
+         font-family: "Consolas","Courier New",monospace; font-size: 0.9em; color:#b1003e; }
+  pre { background: #0d1117; color:#e6edf3; padding: 14px; border-radius: 8px; overflow-x:auto;
+        font-family: "Consolas","Courier New",monospace; font-size: 12.5px; line-height:1.45; }
+  pre code { background: none; color: inherit; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; }
+  th, td { border: 1px solid #d0d7de; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--bleu); color: #fff; }
+  tr:nth-child(even) { background: var(--gris-clair); }
+  blockquote { border-left:4px solid #d0d7de; margin:14px 0; padding:6px 14px; color:#555; background:var(--gris-clair); border-radius:4px; }
+  img { max-width: 100%; }
+  @media print { body { padding:0; } h2 { page-break-after: avoid; } pre, table { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<h1 id="kubernetes---orchestration-de-conteneurs">Kubernetes - Orchestration de Conteneurs</h1>
+<h2 id="🎯-utilité-dans-le-projet">🎯 Utilité dans le projet</h2>
+<p>Kubernetes (K8s) <strong>orchestre et gère</strong> les conteneurs Docker en production :</p>
+<ul>
+<li>🔄 Auto-scaling : Ajuste le nombre de pods selon la charge</li>
+<li>🏥 Self-healing : Redémarre les pods défaillants</li>
+<li>⚖️ Load balancing : Distribue le trafic</li>
+<li>🔄 Rolling updates : Déploiement sans downtime</li>
+<li>📦 Service discovery : DNS interne automatique</li>
+</ul>
+<h2 id="🏗️-architecture-du-projet">🏗️ Architecture du projet</h2>
+<pre><code>┌────────────────────────────────────────────────────────┐
+│          Namespace: devops-portfolio                   │
+│                                                        │
+│  Browser :30080                                        │
+│      │                                                 │
+│      ▼                                                 │
+│  ┌─────────────────────────────┐                      │
+│  │  frontend-service (NodePort)│                      │
+│  │  Port externe: 30080         │                      │
+│  └──────────┬──────────────────┘                      │
+│             │                                          │
+│             ▼                                          │
+│  ┌─────────────────────────┐                          │
+│  │  frontend Pod            │                          │
+│  │  ┌──────────────────┐   │                          │
+│  │  │ Nginx :80        │   │                          │
+│  │  │ React SPA        │   │                          │
+│  │  └──────────────────┘   │                          │
+│  └──────────┬───────────────┘                         │
+│             │ /api/*                                   │
+│             ▼                                          │
+│  ┌─────────────────────────────┐                      │
+│  │  backend-service (ClusterIP)│                      │
+│  └──────────┬──────────────────┘                      │
+│             │                                          │
+│             ▼                                          │
+│  ┌─────────────────────────┐                          │
+│  │  backend Pod             │                          │
+│  │  ┌──────────────────┐   │                          │
+│  │  │ Express :5000    │   │                          │
+│  │  │ Node.js 22       │   │                          │
+│  │  └──────────────────┘   │                          │
+│  └──────────┬───────────────┘                         │
+│             │                                          │
+│             ▼                                          │
+│  ┌─────────────────────────────┐                      │
+│  │  mongo-service (ClusterIP)  │                      │
+│  └──────────┬──────────────────┘                      │
+│             │                                          │
+│             ▼                                          │
+│  ┌─────────────────────────┐                          │
+│  │  mongo Pod               │                          │
+│  │  ┌──────────────────┐   │                          │
+│  │  │ MongoDB :27017   │   │                          │
+│  │  └──────────────────┘   │                          │
+│  └──────────┬───────────────┘                         │
+│             │                                          │
+│             ▼                                          │
+│  ┌─────────────────────────┐                          │
+│  │  mongo-pvc               │                          │
+│  │  1Gi PersistentVolume    │                          │
+│  └──────────────────────────┘                         │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+</code></pre>
+<h2 id="📦-objets-kubernetes-déployés">📦 Objets Kubernetes déployés</h2>
+<h3 id="1-namespace">1. Namespace</h3>
+<pre><code class="language-yaml"># k8s/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devops-portfolio
+  labels:
+    name: devops-portfolio
+</code></pre>
+<p><strong>Rôle</strong> : Isole les ressources du projet</p>
+<h3 id="2-secret">2. Secret</h3>
+<pre><code class="language-yaml"># k8s/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mern-secret
+  namespace: devops-portfolio
+type: Opaque
+data:
+  JWT_SECRET: &lt;base64&gt;
+  MONGO_PASSWORD: &lt;base64&gt;
+  MONGO_URI: &lt;base64&gt;
+</code></pre>
+<p><strong>Rôle</strong> : Stocke les credentials de manière sécurisée</p>
+<h3 id="3-configmap">3. ConfigMap</h3>
+<pre><code class="language-yaml"># k8s/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mern-config
+  namespace: devops-portfolio
+data:
+  NODE_ENV: &quot;production&quot;
+  PORT: &quot;5000&quot;
+  VITE_API_URL: &quot;/api&quot;
+</code></pre>
+<p><strong>Rôle</strong> : Configuration non sensible</p>
+<h3 id="4-mongodb-deployment">4. MongoDB Deployment</h3>
+<pre><code class="language-yaml"># k8s/mongo/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-deployment
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:7
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongo-data
+          mountPath: /data/db
+      volumes:
+      - name: mongo-data
+        persistentVolumeClaim:
+          claimName: mongo-pvc
+</code></pre>
+<p><strong>Caractéristiques</strong> :</p>
+<ul>
+<li>1 replica (stateful)</li>
+<li>Volume persistant</li>
+<li>Health checks</li>
+</ul>
+<h3 id="5-mongodb-pvc">5. MongoDB PVC</h3>
+<pre><code class="language-yaml"># k8s/mongo/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+</code></pre>
+<p><strong>Rôle</strong> : Demande de stockage persistant</p>
+<h3 id="6-mongodb-service">6. MongoDB Service</h3>
+<pre><code class="language-yaml"># k8s/mongo/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-service
+spec:
+  type: ClusterIP
+  selector:
+    app: mongo
+  ports:
+  - port: 27017
+    targetPort: 27017
+</code></pre>
+<p><strong>Type ClusterIP</strong> : Accessible uniquement depuis le cluster</p>
+<h3 id="7-backend-deployment">7. Backend Deployment</h3>
+<pre><code class="language-yaml"># k8s/backend/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: backend
+        image: lims4/devops-portfolio-mern-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: mern-secret
+              key: JWT_SECRET
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 5000
+          initialDelaySeconds: 30
+</code></pre>
+<p><strong>Caractéristiques</strong> :</p>
+<ul>
+<li>Image depuis Docker Hub</li>
+<li>Variables d&#39;environnement depuis Secret/ConfigMap</li>
+<li>Health checks HTTP</li>
+</ul>
+<h3 id="8-backend-service">8. Backend Service</h3>
+<pre><code class="language-yaml"># k8s/backend/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+  - port: 5000
+    targetPort: 5000
+</code></pre>
+<h3 id="9-frontend-deployment">9. Frontend Deployment</h3>
+<pre><code class="language-yaml"># k8s/frontend/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: frontend
+        image: lims4/devops-portfolio-mern-frontend:latest
+        ports:
+        - containerPort: 80
+</code></pre>
+<h3 id="10-frontend-service">10. Frontend Service</h3>
+<pre><code class="language-yaml"># k8s/frontend/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080
+</code></pre>
+<p><strong>Type NodePort</strong> : Accessible depuis l&#39;extérieur sur le port 30080</p>
+<h2 id="🚀-déploiement">🚀 Déploiement</h2>
+<h3 id="méthode-1--kubectl-manuel">Méthode 1 : kubectl (manuel)</h3>
+<pre><code class="language-bash"># 1. Créer le namespace
+kubectl apply -f k8s/namespace.yaml
+
+# 2. Secrets et ConfigMap
+kubectl apply -f k8s/secret.yaml
+kubectl apply -f k8s/configmap.yaml
+
+# 3. MongoDB
+kubectl apply -f k8s/mongo/
+
+# 4. Backend
+kubectl apply -f k8s/backend/
+
+# 5. Frontend
+kubectl apply -f k8s/frontend/
+
+# 6. Vérifier
+kubectl get all -n devops-portfolio
+</code></pre>
+<h3 id="méthode-2--jenkins-automatique">Méthode 2 : Jenkins (automatique)</h3>
+<pre><code class="language-groovy">stage(&#39;Deploy to Kubernetes&#39;) {
+    sh &quot;&quot;&quot;
+        kubectl apply -f k8s/
+        kubectl rollout restart deployment/backend-deployment
+        kubectl rollout status deployment/backend-deployment
+    &quot;&quot;&quot;
+}
+</code></pre>
+<h2 id="🔍-commandes-essentielles">🔍 Commandes essentielles</h2>
+<h3 id="voir-les-ressources">Voir les ressources</h3>
+<pre><code class="language-bash"># Tous les objets
+kubectl get all -n devops-portfolio
+
+# Pods avec détails
+kubectl get pods -n devops-portfolio -o wide
+
+# Services
+kubectl get svc -n devops-portfolio
+
+# Deployments
+kubectl get deployments -n devops-portfolio
+</code></pre>
+<h3 id="logs">Logs</h3>
+<pre><code class="language-bash"># Logs d&#39;un pod
+kubectl logs -f &lt;pod-name&gt; -n devops-portfolio
+
+# Logs d&#39;un deployment
+kubectl logs -f deployment/backend-deployment -n devops-portfolio
+
+# Logs depuis le début
+kubectl logs &lt;pod-name&gt; -n devops-portfolio --since=1h
+</code></pre>
+<h3 id="debug">Debug</h3>
+<pre><code class="language-bash"># Describe (événements, erreurs)
+kubectl describe pod &lt;pod-name&gt; -n devops-portfolio
+
+# Entrer dans un pod
+kubectl exec -it &lt;pod-name&gt; -n devops-portfolio -- sh
+
+# Port-forward local
+kubectl port-forward svc/frontend-service 3000:80 -n devops-portfolio
+</code></pre>
+<h3 id="scaling">Scaling</h3>
+<pre><code class="language-bash"># Scaler manuellement
+kubectl scale deployment backend-deployment --replicas=3 -n devops-portfolio
+
+# Auto-scaling (HPA - nécessite metrics-server)
+kubectl autoscale deployment backend-deployment \
+  --min=2 --max=5 --cpu-percent=80 \
+  -n devops-portfolio
+</code></pre>
+<h3 id="rolling-update">Rolling update</h3>
+<pre><code class="language-bash"># Mettre à jour l&#39;image
+kubectl set image deployment/backend-deployment \
+  backend=lims4/backend:v2.0.0 \
+  -n devops-portfolio
+
+# Voir le statut du rollout
+kubectl rollout status deployment/backend-deployment -n devops-portfolio
+
+# Rollback
+kubectl rollout undo deployment/backend-deployment -n devops-portfolio
+</code></pre>
+<h2 id="🏥-self-healing">🏥 Self-healing</h2>
+<p>Kubernetes redémarre automatiquement les pods défaillants :</p>
+<pre><code class="language-bash"># Simuler un crash
+kubectl delete pod &lt;pod-name&gt; -n devops-portfolio
+
+# Observer la recréation automatique
+kubectl get pods -n devops-portfolio -w
+</code></pre>
+<h2 id="📊-état-actuel-du-projet">📊 État actuel du projet</h2>
+<pre><code class="language-bash">$ kubectl get all -n devops-portfolio
+
+NAME                                      READY   STATUS    RESTARTS
+pod/mongo-deployment-xxx                  1/1     Running   0
+pod/backend-deployment-xxx                1/1     Running   0
+pod/frontend-deployment-xxx               1/1     Running   0
+
+NAME                       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)
+service/mongo-service      ClusterIP   10.x.x.x        &lt;none&gt;        27017/TCP
+service/backend-service    ClusterIP   10.x.x.x        &lt;none&gt;        5000/TCP
+service/frontend-service   NodePort    10.x.x.x        &lt;none&gt;        80:30080/TCP
+
+NAME                                 READY   UP-TO-DATE   AVAILABLE
+deployment.apps/mongo-deployment     1/1     1            1
+deployment.apps/backend-deployment   1/1     1            1
+deployment.apps/frontend-deployment  1/1     1            1
+</code></pre>
+<h2 id="🔒-rbac---jenkins-deployer">🔒 RBAC - Jenkins deployer</h2>
+<p>Pour permettre à Jenkins de déployer :</p>
+<pre><code class="language-yaml"># k8s/jenkins-rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins-deployer
+  namespace: devops-portfolio
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jenkins-deploy-role
+  namespace: devops-portfolio
+rules:
+- apiGroups: [&quot;apps&quot;, &quot;&quot;, &quot;batch&quot;]
+  resources: [&quot;deployments&quot;, &quot;services&quot;, &quot;pods&quot;, &quot;jobs&quot;]
+  verbs: [&quot;get&quot;, &quot;list&quot;, &quot;create&quot;, &quot;update&quot;, &quot;patch&quot;, &quot;delete&quot;]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-deploy-binding
+  namespace: devops-portfolio
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: jenkins-deploy-role
+subjects:
+- kind: ServiceAccount
+  name: jenkins-deployer
+  namespace: devops-portfolio
+</code></pre>
+<h2 id="💡-bonnes-pratiques-appliquées">💡 Bonnes pratiques appliquées</h2>
+<p>✅ <strong>Namespace</strong> : Isolation des ressources<br>✅ <strong>Labels</strong> : Organisation et sélection<br>✅ <strong>Health checks</strong> : Détection de défaillances<br>✅ <strong>Resource limits</strong> : Éviter la surcharge<br>✅ <strong>ConfigMap/Secret</strong> : Séparation config/code<br>✅ <strong>Services</strong> : Load balancing automatique<br>✅ <strong>PVC</strong> : Persistence des données  </p>
+<hr>
+<p><strong>Prochaine étape</strong> : <a href="./05-TERRAFORM.md">05-TERRAFORM.md</a></p>
+
+</body>
+</html>
