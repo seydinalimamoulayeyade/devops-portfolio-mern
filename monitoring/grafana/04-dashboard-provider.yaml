@@ -1,0 +1,19 @@
+# Provider de dashboards : au démarrage, Grafana charge tous les fichiers JSON
+# présents dans /var/lib/grafana/dashboards (qu'on alimentera via un ConfigMap).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+  namespace: monitoring
+data:
+  provider.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards

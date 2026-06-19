@@ -7,6 +7,10 @@ metadata:
     app: grafana
 spec:
   replicas: 1
+  strategy:
+    # Recreate : arrête l'ancien pod avant d'en créer un nouveau.
+    # Évite d'avoir besoin du double de ressources (cluster mono-node chargé).
+    type: Recreate
   selector:
     matchLabels:
       app: grafana
@@ -39,7 +43,19 @@ spec:
             # La data source provisionnée (montée au bon endroit attendu par Grafana)
             - name: datasources
               mountPath: /etc/grafana/provisioning/datasources
+            # Le provider de dashboards (dit à Grafana où chercher les JSON)
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            # Les dashboards eux-mêmes (fichiers JSON)
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
       volumes:
         - name: datasources
           configMap:
             name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
