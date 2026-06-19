@@ -10,17 +10,26 @@ data:
       # Délai après lequel une alerte non re-déclenchée est considérée "résolue"
       resolve_timeout: 5m
 
+      # ── Configuration SMTP (Gmail) ────────────────────────────────────
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'seydinalimamoulayeyade@gmail.com'
+      smtp_auth_username: 'seydinalimamoulayeyade@gmail.com'
+      # Le mot de passe n'est PAS écrit ici : il est lu depuis un fichier
+      # monté à partir du Secret Kubernetes "alertmanager-smtp".
+      smtp_auth_password_file: /etc/alertmanager/secrets/smtp-password
+      smtp_require_tls: true
+
     # ── route : l'arbre de décision pour AIGUILLER les alertes ──────────────
     route:
-      receiver: 'default'        # destination par défaut
-      group_by: ['alertname']    # regroupe les alertes du même nom en 1 notification
-      group_wait: 10s            # attend 10s avant la 1re notification (laisse le temps de grouper)
-      group_interval: 30s        # délai avant d'envoyer des nouveautés d'un groupe existant
-      repeat_interval: 1h        # ré-envoie une alerte toujours active au plus toutes les heures
+      receiver: 'email'         # destination par défaut
+      group_by: ['alertname']   # regroupe les alertes du même nom en 1 notification
+      group_wait: 10s           # attend 10s avant la 1re notification (laisse le temps de grouper)
+      group_interval: 30s       # délai avant d'envoyer des nouveautés d'un groupe existant
+      repeat_interval: 1h       # ré-envoie une alerte toujours active au plus toutes les heures
 
     # ── receivers : les destinations possibles ──────────────────────────────
     receivers:
-      # Pour l'instant, un receiver "vide" : les alertes arrivent dans l'UI
-      # d'Alertmanager mais ne partent vers aucun canal externe.
-      # On ajoutera Slack/email (avec un secret) à l'étape suivante.
-      - name: 'default'
+      - name: 'email'
+        email_configs:
+          - to: 'seydinalimamoulayeyade@gmail.com'
+            send_resolved: true   # envoie aussi un mail quand l'alerte se résout

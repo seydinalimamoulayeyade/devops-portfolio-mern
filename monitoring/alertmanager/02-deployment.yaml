@@ -33,7 +33,14 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/alertmanager
+            # Le secret SMTP, monté comme fichier (lecture seule)
+            - name: smtp-secret
+              mountPath: /etc/alertmanager/secrets
+              readOnly: true
       volumes:
         - name: config
           configMap:
             name: alertmanager-config
+        - name: smtp-secret
+          secret:
+            secretName: alertmanager-smtp
