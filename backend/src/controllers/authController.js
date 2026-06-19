@@ -3,6 +3,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { loginAttempts } = require("../middleware/metrics");
 
 exports.register = async (req, res) => {
   res.status(403).json({
@@ -19,17 +20,23 @@ exports.login = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Utilisateur invalide" });
+    if (!user) {
+      loginAttempts.inc({ result: "failure" });
+      return res.status(400).json({ message: "Utilisateur invalide" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    if (!isMatch) {
+      loginAttempts.inc({ result: "failure" });
       return res.status(400).json({ message: "Mot de passe invalide" });
+    }
 
     const role = user.role || "user";
     const token = jwt.sign({ id: user._id, role }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
 
+    loginAttempts.inc({ result: "success" });
     res.json({
       token,
       user: {

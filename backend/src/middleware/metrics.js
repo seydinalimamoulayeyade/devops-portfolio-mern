@@ -33,6 +33,22 @@ const httpRequestsTotal = new client.Counter({
 });
 register.registerMetric(httpRequestsTotal);
 
+// ── Métriques MÉTIER (spécifiques à l'application) ──────────────────────────
+// Tentatives de connexion, ventilées par résultat (success / failure).
+const loginAttempts = new client.Counter({
+  name: 'auth_login_attempts_total',
+  help: 'Nombre de tentatives de connexion par résultat',
+  labelNames: ['result'],
+});
+register.registerMetric(loginAttempts);
+
+// Nombre de projets créés via l'API.
+const projectsCreated = new client.Counter({
+  name: 'projects_created_total',
+  help: 'Nombre total de projets créés',
+});
+register.registerMetric(projectsCreated);
+
 // ── 4. Le middleware : mesure CHAQUE requête qui traverse l'app ──────────────
 function metricsMiddleware(req, res, next) {
   // On démarre un chrono à l'entrée de la requête
@@ -57,4 +73,4 @@ function metricsMiddleware(req, res, next) {
   next();
 }
 
-module.exports = { register, metricsMiddleware };
+module.exports = { register, metricsMiddleware, loginAttempts, projectsCreated };

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Project = require('../models/Project');
+const { projectsCreated } = require('../middleware/metrics');
 
 function normalizeTechnologies(value) {
   if (!value) return [];
@@ -71,6 +72,7 @@ exports.createProject = async (req, res) => {
     });
 
     const saved = await project.save();
+    projectsCreated.inc();
     res.status(201).json(saved);
   } catch (error) {
     res.status(500).json({ message: 'Erreur lors de la creation du projet' });
