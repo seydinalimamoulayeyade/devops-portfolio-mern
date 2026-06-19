@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Synthèse Grafana — DevOps Portfolio MERN</title>
+<style>
+  :root { --bleu:#1f6feb; --orange:#f46800; --gris:#444; --gris-clair:#f5f6f8; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+         color:#1b1f24; line-height:1.55; max-width: 880px; margin: 0 auto; padding: 32px; }
+  h1 { color: var(--orange); font-size: 28px; border-bottom: 3px solid var(--orange); padding-bottom: 8px; }
+  h2 { color: var(--bleu); font-size: 21px; margin-top: 32px; border-bottom: 1px solid #d0d7de; padding-bottom: 4px; }
+  h3 { color: var(--gris); font-size: 16px; margin-top: 20px; }
+  code { background: var(--gris-clair); padding: 1px 5px; border-radius: 4px;
+         font-family: "Consolas", "Courier New", monospace; font-size: 0.9em; color:#b1003e; }
+  pre { background: #0d1117; color:#e6edf3; padding: 14px; border-radius: 8px; overflow-x:auto;
+        font-family: "Consolas","Courier New",monospace; font-size: 12.5px; line-height:1.4; }
+  pre code { background: none; color: inherit; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 14px; }
+  th, td { border: 1px solid #d0d7de; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--bleu); color: #fff; }
+  tr:nth-child(even) { background: var(--gris-clair); }
+  .tag { display:inline-block; background:var(--bleu); color:#fff; border-radius:10px; padding:1px 9px; font-size:12px; }
+  .note { background:#fff8e6; border-left:4px solid #e3a008; padding:10px 14px; border-radius:4px; margin:14px 0; }
+  .ok { color:#1a7f37; font-weight:600; }
+  .lead { font-size: 15px; color:#444; }
+  footer { margin-top:40px; border-top:1px solid #d0d7de; padding-top:10px; font-size:12px; color:#777; }
+  @media print { body { padding:0; } h2 { page-break-after: avoid; } pre, table { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<h1>Synthèse Grafana</h1>
+<p class="lead">Couche de visualisation par-dessus Prometheus, pour le projet
+<strong>DevOps Portfolio MERN</strong>. Data source, dashboards, panneaux, options de
+visualisation, et industrialisation en « dashboards as code ».</p>
+<p><span class="tag">Suite de</span> la synthèse Prometheus &nbsp;
+   <span class="tag">Cluster</span> Kubernetes local (kind) &nbsp;
+   <span class="tag">Namespace</span> <code>monitoring</code></p>
+
+<h2>1. Rôle de Grafana</h2>
+<p>Grafana ne stocke <strong>aucune</strong> métrique. C'est un outil de <strong>visualisation</strong>
+qui se connecte à des <strong>sources de données</strong> (ici Prometheus), les interroge en
+PromQL, et affiche le résultat sous forme de <strong>tableaux de bord</strong> composés de
+<strong>panneaux</strong>.</p>
+<pre>
+   Navigateur (toi)
+        |
+        v
+   +-----------+      requete PromQL (proxy)      +-------------+
+   |  GRAFANA  | -------------------------------> | PROMETHEUS  |
+   | dashboards|  <-------------------------------| (data store)|
+   +-----------+      series temporelles          +-------------+
+</pre>
+
+<h2>2. Concepts clés</h2>
+<table>
+  <tr><th>Concept</th><th>Définition</th></tr>
+  <tr><td><strong>Data source</strong></td><td>La source que Grafana interroge (Prometheus, Loki…). Mode <code>proxy</code> = Grafana l'appelle côté serveur.</td></tr>
+  <tr><td><strong>Dashboard</strong></td><td>Une page composée de panneaux. Techniquement, un simple document <strong>JSON</strong>.</td></tr>
+  <tr><td><strong>Panel (panneau)</strong></td><td>Une visualisation d'une ou plusieurs requêtes PromQL.</td></tr>
+  <tr><td><strong>Type de visualisation</strong></td><td>La forme du panneau : <em>Time series</em> (courbe), <em>Gauge</em> (cadran), <em>Stat</em> (gros chiffre), <em>Table</em>…</td></tr>
+  <tr><td><strong>Variable de dashboard</strong></td><td>Menu déroulant en haut du dashboard (ex. <code>job</code>, <code>instance</code>) pour filtrer dynamiquement et rendre le dashboard réutilisable.</td></tr>
+  <tr><td><strong>Provisioning</strong></td><td>Configurer Grafana « en code » au démarrage (data sources et dashboards via des fichiers), au lieu de cliquer dans l'UI.</td></tr>
+</table>
+
+<h2>3. Composants déployés</h2>
+<table>
+  <tr><th>Élément</th><th>Rôle</th><th>Fichier</th></tr>
+  <tr><td>Data source provisionnée</td><td>Prometheus déclaré en code (UID fixe <code>prometheus</code>)</td><td><code>grafana/01-datasource.yaml</code></td></tr>
+  <tr><td>Deployment</td><td>Le serveur Grafana (image, admin, montages)</td><td><code>grafana/02-deployment.yaml</code></td></tr>
+  <tr><td>Service</td><td>Accès interne (port 3000)</td><td><code>grafana/03-service.yaml</code></td></tr>
+  <tr><td>Provider de dashboards</td><td>Dit à Grafana de charger les JSON d'un dossier</td><td><code>grafana/04-dashboard-provider.yaml</code></td></tr>
+  <tr><td>Dashboard « DevOps Portfolio »</td><td>Le tableau de bord versionné en JSON</td><td><code>grafana/dashboards/devops-portfolio.json</code></td></tr>
+</table>
+
+<h3>Le dashboard « DevOps Portfolio » (panneaux)</h3>
+<table>
+  <tr><th>Panneau</th><th>Type</th><th>Requête PromQL</th></tr>
+  <tr><td>RAM utilisée %</td><td>Stat</td><td><code>(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100</code></td></tr>
+  <tr><td>CPU utilisé %</td><td>Stat</td><td><code>100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])))</code></td></tr>
+  <tr><td>Pods Running (dev)</td><td>Stat</td><td><code>sum(kube_pod_status_phase{namespace="devops-portfolio-dev", phase="Running"})</code></td></tr>
+  <tr><td>Requêtes/s par route</td><td>Time series</td><td><code>sum(rate(http_requests_total[5m])) by (route)</code></td></tr>
+  <tr><td>Latence moyenne par route</td><td>Time series</td><td><code>rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])</code></td></tr>
+</table>
+
+<h2>4. Dashboards as code (la bonne pratique)</h2>
+<p>Plutôt que de créer les dashboards à la main (perdus si le pod redémarre), on les
+<strong>versionne en JSON dans Git</strong> et Grafana les charge automatiquement via le provider.</p>
+<pre><code># Régénérer le ConfigMap des dashboards à partir des fichiers JSON
+kubectl create configmap grafana-dashboards -n monitoring \
+  --from-file=monitoring/grafana/dashboards \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl rollout restart deployment/grafana -n monitoring</code></pre>
+<p><strong>Importer un dashboard communautaire</strong> (ex. « Node Exporter Full », ID
+<code>1860</code>) : UI → Dashboards → New → Import → saisir l'ID. Pour le versionner ensuite,
+déposer son JSON dans le dossier <code>dashboards/</code> et régénérer le ConfigMap.</p>
+
+<h2>5. Commandes utiles</h2>
+<pre><code># Accéder à l'UI Grafana (cluster kind => port-forward)
+kubectl port-forward -n monitoring svc/grafana 3000:3000
+# -> http://localhost:3000   (admin / admin)
+
+# Réinitialiser le mot de passe admin (pas d'email de reset : SMTP non configuré pour Grafana)
+kubectl exec -n monitoring deploy/grafana -- grafana cli admin reset-admin-password admin</code></pre>
+
+<h2>6. Pièges rencontrés & bonnes pratiques</h2>
+<table>
+  <tr><th>Piège</th><th>Leçon</th></tr>
+  <tr><td>Pas de sélecteur de data source à l'import</td><td>Normal si une seule source par défaut : Grafana la lie automatiquement.</td></tr>
+  <tr><td>Pod Grafana bloqué en <code>Pending</code></td><td>Cluster mono-node à court de CPU + stratégie RollingUpdate (besoin du double). Passer en <code>strategy: Recreate</code>.</td></tr>
+  <tr><td>Mot de passe oublié, pas d'email</td><td>Grafana n'a pas de SMTP (seul Alertmanager en a). Reset via <code>grafana cli</code>.</td></tr>
+  <tr><td>Mot de passe / dashboards perdus au redémarrage</td><td>Stockage éphémère. Le mot de passe redevient celui de <code>GF_SECURITY_ADMIN_PASSWORD</code>. Pour persister : un PVC.</td></tr>
+  <tr><td>Dashboard provisionné « datasource not found »</td><td>Fixer un UID stable sur la data source (<code>uid: prometheus</code>) et le référencer dans le JSON.</td></tr>
+  <tr><td>Identifiants admin en clair</td><td>OK en local ; en prod, passer par un Secret Kubernetes.</td></tr>
+</table>
+
+<h2>7. Glossaire express</h2>
+<table>
+  <tr><th>Terme</th><th>En une phrase</th></tr>
+  <tr><td>Data source</td><td>Source de données interrogée par Grafana.</td></tr>
+  <tr><td>Panel</td><td>Un bloc de visualisation dans un dashboard.</td></tr>
+  <tr><td>Provisioning</td><td>Configuration de Grafana via des fichiers, au démarrage.</td></tr>
+  <tr><td>Recreate</td><td>Stratégie de déploiement : arrêter l'ancien pod avant de créer le nouveau.</td></tr>
+  <tr><td>PVC</td><td>PersistentVolumeClaim : stockage persistant (survit aux redémarrages).</td></tr>
+</table>
+
+<h2>8. Prochaines étapes</h2>
+<ul>
+  <li><strong>Persistance</strong> : ajouter un PVC à Grafana (et à Prometheus) pour conserver état et historique.</li>
+  <li><strong>Alerting Grafana</strong> : créer des alertes directement depuis les panneaux + contact points.</li>
+  <li><strong>Plus de dashboards as code</strong> : versionner le 1860 et d'autres dashboards métier.</li>
+  <li><strong>Industrialisation</strong> : déployer la stack via Terraform (provider Helm) pour rester cohérent avec l'IaC du projet.</li>
+</ul>
+
+<footer>
+  Document généré pour le projet DevOps Portfolio MERN — Seydina Limamou Laye Yade.
+  Code et manifests : dossier <code>monitoring/grafana/</code> du dépôt.
+</footer>
+
+</body>
+</html>
