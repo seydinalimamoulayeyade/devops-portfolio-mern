@@ -33,6 +33,12 @@ resource "kubernetes_deployment_v1" "frontend" {
   spec {
     replicas = var.replicas
 
+    # Recreate : arrête l'ancien pod avant de créer le nouveau.
+    # Évite de devoir héberger 2 pods simultanément (cluster mono-node à court de CPU).
+    strategy {
+      type = "Recreate"
+    }
+
     selector {
       match_labels = {
         app = "frontend"
