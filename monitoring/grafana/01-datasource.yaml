@@ -1,0 +1,16 @@
+# Provisioning : Grafana lit ce fichier au démarrage et configure automatiquement
+# la data source Prometheus (config-as-code, pas de clic manuel).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy                 # Grafana interroge Prometheus côté serveur
+        url: http://prometheus:9090    # adresse interne du Service Prometheus
+        isDefault: true
