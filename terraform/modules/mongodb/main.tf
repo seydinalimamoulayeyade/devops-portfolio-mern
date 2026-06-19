@@ -63,6 +63,13 @@ resource "kubernetes_deployment_v1" "mongo" {
   spec {
     replicas = var.replicas
 
+    # Recreate : INDISPENSABLE pour un stateful mono-instance avec PVC ReadWriteOnce.
+    # En RollingUpdate, le nouveau pod ne peut pas monter le volume tenu par l'ancien
+    # => deadlock du rollout. Recreate arrête l'ancien (libère le volume) avant le nouveau.
+    strategy {
+      type = "Recreate"
+    }
+
     selector {
       match_labels = {
         app = "mongo"

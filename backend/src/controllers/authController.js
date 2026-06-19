@@ -45,6 +45,7 @@ exports.login = async (req, res) => {
       },
     });
   } catch (err) {
+    loginAttempts.inc({ result: "error" });
     res.status(500).json({ message: "Erreur serveur" });
   }
 };

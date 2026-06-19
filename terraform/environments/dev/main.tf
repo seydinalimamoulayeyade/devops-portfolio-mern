@@ -51,8 +51,8 @@ module "mongodb" {
   # Resources (dev: limites réduites)
   cpu_request    = "100m"
   cpu_limit      = "500m"
-  memory_request = "128Mi"
-  memory_limit   = "512Mi"
+  memory_request = "256Mi"
+  memory_limit   = "1Gi"
 
   # Labels
   labels      = local.mongodb_labels

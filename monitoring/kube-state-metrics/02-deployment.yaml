@@ -9,6 +9,8 @@ metadata:
     app: kube-state-metrics
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: kube-state-metrics
@@ -27,7 +29,7 @@ spec:
               containerPort: 8080   # porte /metrics de cet exporter
           resources:
             requests:
-              cpu: "50m"
+              cpu: "25m"
               memory: "64Mi"
             limits:
               cpu: "200m"

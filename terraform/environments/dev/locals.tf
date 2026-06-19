@@ -52,8 +52,8 @@ locals {
     "prometheus.io/path"   = "/metrics"
   } : {}
 
-  # Connexion MongoDB
-  mongo_uri = "mongodb://mongo-service:${var.mongo_port}/${var.mongo_database}"
+  # Connexion MongoDB (avec authentification : Mongo a un utilisateur root admin)
+  mongo_uri = "mongodb://admin:${var.mongo_password}@mongo-service:${var.mongo_port}/${var.mongo_database}?authSource=admin"
 
   # Noms des ressources MongoDB
   mongodb_deployment_name = "mongo-deployment"
