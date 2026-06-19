@@ -133,14 +133,15 @@ Browser :3000 ────► │  frontend-service (NodePort :30080)       │
 
 ## 📚 Documentation
 
-Toute la documentation DevOps est centralisée dans le dossier [`docs/`](docs/) :
+Toute la documentation DevOps est centralisée (au format PDF) dans le dossier [`docs/`](docs/), un document par étape du fil rouge :
 
-- **[docs/README.md](docs/README.md)** - Vue d'ensemble et index
-- **[docs/01-DOCKER.md](docs/01-DOCKER.md)** - Conteneurisation et Docker Compose
-- **[docs/02-JENKINS.md](docs/02-JENKINS.md)** - Pipeline CI/CD automatisé
-- **[docs/03-SONARQUBE.md](docs/03-SONARQUBE.md)** - Analyse qualité de code
-- **[docs/04-KUBERNETES.md](docs/04-KUBERNETES.md)** - Orchestration de conteneurs
-- **[docs/05-TERRAFORM.md](docs/05-TERRAFORM.md)** - Infrastructure as Code
+- **[01-DOCKER.pdf](docs/01-DOCKER.pdf)** — Conteneurisation et Docker Compose
+- **[02-JENKINS.pdf](docs/02-JENKINS.pdf)** — Pipeline CI/CD automatisé
+- **[03-SONARQUBE.pdf](docs/03-SONARQUBE.pdf)** — Analyse qualité de code
+- **[04-KUBERNETES.pdf](docs/04-KUBERNETES.pdf)** — Orchestration de conteneurs (manifests manuels)
+- **[05-TERRAFORM.pdf](docs/05-TERRAFORM.pdf)** — Infrastructure as Code
+- **[06-PROMETHEUS.pdf](docs/06-PROMETHEUS.pdf)** — Monitoring : métriques, exporters, alertes
+- **[07-GRAFANA.pdf](docs/07-GRAFANA.pdf)** — Visualisation : data sources, dashboards
 
 ## Structure du projet
 
@@ -168,9 +169,9 @@ devops-portfolio-mern/
 │   ├── Dockerfile               # Multi-stage build (Node.js → Nginx)
 │   └── package.json
 │
-├── k8s/                         # Manifests Kubernetes (legacy)
-│   ├── namespace.yaml
-│   ├── secret.yaml
+├── k8s/                         # Manifests Kubernetes manuels — étape 04 (cf. k8s/README.md)
+│   ├── namespace.yaml           #   Référence pédagogique. Le déploiement réel
+│   ├── secret.yaml              #   passe par terraform/ (étape 05, source de vérité).
 │   ├── configmap.yaml
 │   ├── jenkins-rbac.yaml
 │   ├── mongo/
@@ -201,25 +202,27 @@ devops-portfolio-mern/
 │   │   ├── mongodb/             # Module MongoDB
 │   │   ├── backend/             # Module Backend API
 │   │   └── frontend/            # Module Frontend React
-│   ├── README.md
-│   ├── QUICKSTART.md
-│   └── ARCHITECTURE.md
+│   └── README.md
 │
-├── monitoring/                  # Monitoring (à venir)
-│   ├── prometheus/
-│   └── grafana/
+├── monitoring/                  # Observabilité (étapes 06-07) — déployé via kubectl
+│   ├── prometheus/              # Serveur + règles d'alerte
+│   ├── node-exporter/           # Métriques machine
+│   ├── kube-state-metrics/      # État des objets K8s
+│   ├── alertmanager/            # Notifications (email)
+│   └── grafana/                 # Dashboards (data source Prometheus)
 │
 ├── scripts/                     # Scripts utilitaires
 │   ├── start-devops.sh          # Démarrage infra locale
 │   └── README.md
 │
-├── docs/                        # Documentation
-│   ├── README.md                # Index général
-│   ├── 01-DOCKER.md
-│   ├── 02-JENKINS.md
-│   ├── 03-SONARQUBE.md
-│   ├── 04-KUBERNETES.md
-│   └── 05-TERRAFORM.md
+├── docs/                        # Documentation (PDF, 1 par étape)
+│   ├── 01-DOCKER.pdf
+│   ├── 02-JENKINS.pdf
+│   ├── 03-SONARQUBE.pdf
+│   ├── 04-KUBERNETES.pdf
+│   ├── 05-TERRAFORM.pdf
+│   ├── 06-PROMETHEUS.pdf
+│   └── 07-GRAFANA.pdf
 ├── docker-compose.yml           # Stack applicative locale
 ├── docker-compose.sonar.yml     # Infrastructure SonarQube + PostgreSQL
 ├── Jenkinsfile                  # Pipeline CI/CD 6 stages
@@ -403,7 +406,7 @@ kubectl get pods -n devops-portfolio                                    # Vérif
 | 3 | SonarQube + Tests Jest | ✅ Complété |
 | 4 | Kubernetes | ✅ Complété |
 | 5 | Terraform — Infrastructure as Code | ✅ Complété |
-| 6 | Prometheus / Grafana — Monitoring | 🔜 À venir |
+| 6 | Prometheus / Grafana — Monitoring | ✅ Complété |
 | 7 | Trivy — Scan de sécurité | 🔜 À venir |
 | 8 | Outils IA pour DevOps | 🔜 À venir |
 
