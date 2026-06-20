@@ -92,7 +92,26 @@ else
       || log_warn "Échec du terraform apply — lance-le manuellement dans $TF_DIR"
   fi
 
-  # ── 4c. Stack de monitoring (Prometheus, Alertmanager, Grafana, exporters) ──
+  # ── 4c. Compte admin dans la base Mongo du cluster ─────────────────────────
+  # La base Mongo K8s est indépendante de celle de Docker Compose : elle doit
+  # avoir son propre compte admin. Le script seedAdmin.js fait un "upsert"
+  # (créé s'il manque, sinon met à jour) → idempotent, ré-exécutable sans risque.
+  if kubectl get deployment/backend-deployment -n "$K8S_NAMESPACE" > /dev/null 2>&1; then
+    log_info "Vérification du compte admin (seed dans la base du cluster)..."
+    if kubectl rollout status deployment/backend-deployment -n "$K8S_NAMESPACE" --timeout=90s > /dev/null 2>&1; then
+      if kubectl exec -n "$K8S_NAMESPACE" deployment/backend-deployment -- npm run seed:admin > /dev/null 2>&1; then
+        log_success "Compte admin prêt (admin@test.com / #admin123)"
+      else
+        log_warn "Seed admin échoué — lance manuellement :"
+        log_warn "  kubectl exec -n $K8S_NAMESPACE deployment/backend-deployment -- npm run seed:admin"
+      fi
+    else
+      log_warn "Backend pas encore prêt — seed admin ignoré. À relancer plus tard :"
+      log_warn "  kubectl exec -n $K8S_NAMESPACE deployment/backend-deployment -- npm run seed:admin"
+    fi
+  fi
+
+  # ── 4d. Stack de monitoring (Prometheus, Alertmanager, Grafana, exporters) ──
   MON_RUNNING=$(kubectl get pods -n monitoring --field-selector=status.phase=Running --no-headers 2>/dev/null | grep -c "Running")
   if [ "${MON_RUNNING:-0}" -ge 5 ]; then
     log_success "Monitoring opérationnel ($MON_RUNNING pods dans 'monitoring')"
@@ -127,6 +146,7 @@ echo -e "  ${GREEN}SonarQube${NC}  → http://localhost:9000"
 echo -e "  ${GREEN}K8s${NC}        → kubectl get pods -n $K8S_NAMESPACE"
 echo ""
 echo -e "  ${YELLOW}Frontend${NC}   → kubectl port-forward service/frontend-service 3000:80 -n $K8S_NAMESPACE"
+echo -e "  ${YELLOW}Login${NC}      → admin@test.com / #admin123   (sur http://localhost:3000/login)"
 echo -e "  ${YELLOW}Grafana${NC}    → kubectl port-forward -n monitoring svc/grafana 3001:3000   (admin/admin)"
 echo -e "  ${YELLOW}Prometheus${NC} → kubectl port-forward -n monitoring svc/prometheus 9090:9090"
 echo ""
