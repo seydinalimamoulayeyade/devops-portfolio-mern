@@ -1,10 +1,10 @@
 {
   "uid": "devops-portfolio",
-  "title": "DevOps Portfolio — Application",
+  "title": "Sama DevOps Portfolio",
   "tags": ["devops-portfolio", "mern", "application"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 3,
+  "version": 4,
   "refresh": "30s",
   "time": { "from": "now-1h", "to": "now" },
   "panels": [
@@ -176,6 +176,34 @@
       "fieldConfig": { "defaults": { "unit": "short" } },
       "targets": [
         { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kube_pod_container_status_restarts_total{namespace=\"devops-portfolio-dev\"}) by (pod)", "legendFormat": "{{pod}}" }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "table",
+      "title": "Alertes actives (firing)",
+      "description": "Liste en direct des alertes Prometheus en cours de déclenchement. Vide = tout va bien. S'appuie sur la métrique spéciale ALERTS exposée par Prometheus.",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": { "type": "color-background" } },
+              { "id": "mappings", "value": [
+                { "type": "value", "options": { "critical": { "color": "red", "index": 0 }, "warning": { "color": "orange", "index": 1 } } }
+              ] }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "ALERTS{alertstate=\"firing\"}", "format": "table", "instant": true }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "Value": true, "__name__": true, "app": true } } }
       ]
     }
   ]

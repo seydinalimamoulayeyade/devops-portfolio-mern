@@ -49,3 +49,13 @@ data:
         metrics_path: /metrics
         static_configs:
           - targets: ['backend-service.devops-portfolio-dev:5000']
+
+      # Job 5 : Jenkins (CI/CD). ⚠️ Jenkins tourne en conteneur Docker sur l'HÔTE,
+      # PAS dans le cluster. Depuis un cluster kind sur Docker Desktop, l'hôte est
+      # joignable via le nom spécial 'host.docker.internal'.
+      # Prérequis : installer le plugin "Prometheus metrics" dans Jenkins
+      # (Manage Jenkins → Plugins). Il expose les métriques sur /prometheus.
+      - job_name: 'jenkins'
+        metrics_path: /prometheus
+        static_configs:
+          - targets: ['host.docker.internal:8080']
