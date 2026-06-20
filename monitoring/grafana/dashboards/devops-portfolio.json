@@ -1,172 +1,118 @@
 {
   "uid": "devops-portfolio",
-  "title": "DevOps Portfolio",
-  "tags": ["devops-portfolio", "mern"],
+  "title": "DevOps Portfolio — Application",
+  "tags": ["devops-portfolio", "mern", "application"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
   "time": { "from": "now-1h", "to": "now" },
   "panels": [
     {
       "id": 1,
       "type": "stat",
-      "title": "RAM utilisee (%)",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "title": "Backend en ligne",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 75 },
-              { "color": "red", "value": 90 }
-            ]
-          }
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
         }
       },
       "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100"
-        }
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "max(up{job=\"backend-app\"})" }
       ]
     },
     {
       "id": 2,
       "type": "stat",
-      "title": "CPU utilise (%)",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "title": "Projets créés (cumul)",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 70 },
-              { "color": "red", "value": 90 }
-            ]
-          }
-        }
-      },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } } },
       "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))"
-        }
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(projects_created_total)" }
       ]
     },
     {
       "id": 3,
       "type": "stat",
-      "title": "Pods Running (dev)",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "title": "Connexions réussies",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": { "unit": "short", "color": { "mode": "thresholds" } }
-      },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "green" } } },
       "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(kube_pod_status_phase{namespace=\"devops-portfolio-dev\", phase=\"Running\"})"
-        }
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(auth_login_attempts_total{result=\"success\"})" }
       ]
     },
     {
       "id": 4,
-      "type": "timeseries",
-      "title": "Requetes/s par route (backend)",
-      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 8 },
+      "type": "stat",
+      "title": "Connexions échouées (sécurité)",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "reqps" } },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(http_requests_total[5m])) by (route)",
-          "legendFormat": "{{route}}"
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 5 }, { "color": "red", "value": 20 } ] },
+          "color": { "mode": "thresholds" }
         }
+      },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(auth_login_attempts_total{result=~\"failure|error\"})" }
       ]
     },
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Latence p95 par route (s)",
-      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 8 },
+      "title": "Trafic — requêtes/s par route",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "s" } },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
       "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))",
-          "legendFormat": "{{route}}"
-        }
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(http_requests_total[5m])) by (route)", "legendFormat": "{{route}}" }
       ]
     },
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Taux d'erreurs 5xx (%)",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 17 },
+      "title": "Latence p95 par route (s)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 5 }
-            ]
-          }
-        }
-      },
+      "fieldConfig": { "defaults": { "unit": "s" } },
       "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 * (sum(rate(http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])))",
-          "legendFormat": "erreurs 5xx %"
-        }
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))", "legendFormat": "{{route}}" }
       ]
     },
     {
       "id": 7,
       "type": "timeseries",
-      "title": "Tentatives de connexion par resultat (cumul)",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 25 },
+      "title": "Taux d'erreurs 5xx (%)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "short" } },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum by (result) (auth_login_attempts_total)",
-          "legendFormat": "{{result}}"
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 5 } ] }
         }
+      },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 * (sum(rate(http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])))", "legendFormat": "erreurs 5xx %" }
       ]
     },
     {
       "id": 8,
-      "type": "stat",
-      "title": "Projets crees (cumul)",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 25 },
+      "type": "timeseries",
+      "title": "Connexions par résultat (par seconde)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" } } },
+      "fieldConfig": { "defaults": { "unit": "short" } },
       "targets": [
-        {
-          "refId": "A",
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(projects_created_total)"
-        }
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(auth_login_attempts_total[5m])) by (result)", "legendFormat": "{{result}}" }
       ]
     }
   ]
