@@ -19,6 +19,12 @@ spec:
       labels:
         app: grafana
     spec:
+      securityContext:
+        # L'image Grafana tourne en UID 472 (non-root). fsGroup garantit que le
+        # volume persistant lui appartient en écriture (sinon "permission denied").
+        fsGroup: 472
+        runAsUser: 472
+        runAsGroup: 472
       containers:
         - name: grafana
           image: grafana/grafana:11.2.0
@@ -40,16 +46,22 @@ spec:
               cpu: "300m"
               memory: "256Mi"
           volumeMounts:
+            # Stockage persistant des données Grafana (DB, dashboards importés, mot de passe)
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
             # La data source provisionnée (montée au bon endroit attendu par Grafana)
             - name: datasources
               mountPath: /etc/grafana/provisioning/datasources
             # Le provider de dashboards (dit à Grafana où chercher les JSON)
             - name: dashboard-provider
               mountPath: /etc/grafana/provisioning/dashboards
-            # Les dashboards eux-mêmes (fichiers JSON)
+            # Les dashboards eux-mêmes (fichiers JSON, montés en sous-dossier du PVC)
             - name: dashboards
               mountPath: /var/lib/grafana/dashboards
       volumes:
+        - name: grafana-storage
+          persistentVolumeClaim:
+            claimName: grafana-pvc
         - name: datasources
           configMap:
             name: grafana-datasources

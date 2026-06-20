@@ -1,0 +1,19 @@
+# PersistentVolumeClaim pour Grafana.
+# Persiste /var/lib/grafana : base SQLite (utilisateurs, mot de passe admin),
+# dashboards importés via l'UI (ex. Node Exporter Full 1860, trop gros pour un ConfigMap),
+# préférences et historique. Sans ça, tout est perdu à chaque redémarrage du pod.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  accessModes:
+    - ReadWriteOnce          # un seul pod en écriture (cohérent avec strategy: Recreate)
+  resources:
+    requests:
+      storage: 1Gi
+  # storageClassName omis volontairement => utilise la StorageClass par défaut du cluster
+  # (sur kind / Docker Desktop : provisionnement local automatique).
