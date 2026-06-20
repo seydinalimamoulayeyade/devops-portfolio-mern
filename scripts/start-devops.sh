@@ -149,4 +149,5 @@ echo -e "  ${YELLOW}Frontend${NC}   → kubectl port-forward service/frontend-se
 echo -e "  ${YELLOW}Login${NC}      → admin@test.com / #admin123   (sur http://localhost:3000/login)"
 echo -e "  ${YELLOW}Grafana${NC}    → kubectl port-forward -n monitoring svc/grafana 3001:3000   (admin/admin)"
 echo -e "  ${YELLOW}Prometheus${NC} → kubectl port-forward -n monitoring svc/prometheus 9090:9090"
+echo -e "  ${YELLOW}Alertmanager${NC} → kubectl port-forward -n monitoring svc/alertmanager 9093:9093"
 echo ""
