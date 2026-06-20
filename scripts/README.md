@@ -16,9 +16,11 @@ Bootstrap de l'environnement local après un redémarrage machine.
 3. Démarre **SonarQube** (`docker-compose.sonar.yml`).
 4. Met à jour le kubeconfig dans Jenkins (accès au cluster depuis le conteneur).
 5. Déploie l'application via **Terraform** (`terraform/environments/dev`, namespace `devops-portfolio-dev`) si les pods ne tournent pas déjà.
+6. Déploie la **stack monitoring** (Prometheus, Alertmanager, Grafana, exporters) si elle n'est pas déjà active.
 
-> Prérequis pour l'étape 5 : `terraform/environments/dev/terraform.tfvars` doit exister
-> (copié depuis `terraform.tfvars.example`). Sinon l'étape est ignorée avec un avertissement.
+> Prérequis étape 5 : `terraform/environments/dev/terraform.tfvars` doit exister (sinon ignoré).
+> Prérequis étape 6 : le secret `alertmanager-smtp` (mot de passe d'app Gmail) doit être créé
+> une seule fois — sinon Alertmanager démarre mais n'enverra pas d'email (le script avertit).
 
 > Le déclenchement du pipeline Jenkins se fait par **polling Git** (pas de webhook externe requis).
 

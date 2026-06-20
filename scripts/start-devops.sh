@@ -25,7 +25,7 @@ log_error()   { echo -e "${RED}[ERR]${NC}  $1"; }
 
 echo ""
 echo -e "${CYAN}╔════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║     DevOps Portfolio — Start Script     ║${NC}"
+echo -e "${CYAN}║     DevOps Portfolio — Start Script    ║${NC}"
 echo -e "${CYAN}╚════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -91,17 +91,42 @@ else
       && log_success "Terraform appliqué — les pods démarrent (~60s)" \
       || log_warn "Échec du terraform apply — lance-le manuellement dans $TF_DIR"
   fi
+
+  # ── 4c. Stack de monitoring (Prometheus, Alertmanager, Grafana, exporters) ──
+  MON_RUNNING=$(kubectl get pods -n monitoring --field-selector=status.phase=Running --no-headers 2>/dev/null | grep -c "Running")
+  if [ "${MON_RUNNING:-0}" -ge 5 ]; then
+    log_success "Monitoring opérationnel ($MON_RUNNING pods dans 'monitoring')"
+  else
+    log_info "Déploiement de la stack monitoring..."
+    # Secret SMTP d'Alertmanager : hors Git (créé une seule fois). On avertit s'il manque.
+    if ! kubectl get secret alertmanager-smtp -n monitoring > /dev/null 2>&1; then
+      log_warn "Secret 'alertmanager-smtp' absent → Alertmanager ne pourra pas envoyer d'email."
+      log_warn "À créer une fois : kubectl create secret generic alertmanager-smtp -n monitoring --from-literal=smtp-password=<MDP_APP_GMAIL>"
+    fi
+    kubectl apply -f "$REPO_ROOT/monitoring/prometheus/"          > /dev/null 2>&1
+    kubectl apply -f "$REPO_ROOT/monitoring/node-exporter/"       > /dev/null 2>&1
+    kubectl apply -f "$REPO_ROOT/monitoring/kube-state-metrics/"  > /dev/null 2>&1
+    kubectl apply -f "$REPO_ROOT/monitoring/alertmanager/"        > /dev/null 2>&1
+    kubectl apply -f "$REPO_ROOT/monitoring/grafana/"             > /dev/null 2>&1
+    # Dashboards Grafana : ConfigMap généré depuis les fichiers JSON versionnés
+    kubectl create configmap grafana-dashboards -n monitoring \
+      --from-file="$REPO_ROOT/monitoring/grafana/dashboards" \
+      --dry-run=client -o yaml 2>/dev/null | kubectl apply -f - > /dev/null 2>&1
+    log_success "Stack monitoring appliquée (pods prêts après ~60s)"
+  fi
 fi
 
 # ── Résumé ────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${CYAN}╔════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║            Environnement prêt           ║${NC}"
+echo -e "${CYAN}║            Environnement prêt          ║${NC}"
 echo -e "${CYAN}╚════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${GREEN}Jenkins${NC}    → http://localhost:8080"
 echo -e "  ${GREEN}SonarQube${NC}  → http://localhost:9000"
 echo -e "  ${GREEN}K8s${NC}        → kubectl get pods -n $K8S_NAMESPACE"
 echo ""
-echo -e "  ${YELLOW}Frontend${NC} → kubectl port-forward service/frontend-service 3000:80 -n $K8S_NAMESPACE"
+echo -e "  ${YELLOW}Frontend${NC}   → kubectl port-forward service/frontend-service 3000:80 -n $K8S_NAMESPACE"
+echo -e "  ${YELLOW}Grafana${NC}    → kubectl port-forward -n monitoring svc/grafana 3001:3000   (admin/admin)"
+echo -e "  ${YELLOW}Prometheus${NC} → kubectl port-forward -n monitoring svc/prometheus 9090:9090"
 echo ""
