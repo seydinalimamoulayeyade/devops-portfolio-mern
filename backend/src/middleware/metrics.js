@@ -49,6 +49,31 @@ const projectsCreated = new client.Counter({
 });
 register.registerMetric(projectsCreated);
 
+// Nombre RÉEL de projets en base (jauge : monte ET descend).
+// Différence avec le compteur ci-dessus : le compteur ne fait qu'augmenter et
+// repart à zéro si le pod redémarre ; la jauge reflète l'état réel de la base.
+// Le hook `collect()` est appelé par prom-client à CHAQUE scrape Prometheus :
+// on y interroge MongoDB (countDocuments) pour rafraîchir la valeur.
+const Project = require('../models/Project');
+const mongoose = require('mongoose');
+
+const projectsCount = new client.Gauge({
+  name: 'portfolio_projects_count',
+  help: 'Nombre actuel de projets stockés en base',
+  async collect() {
+    // mongoose.connection.readyState === 1 → connexion établie.
+    // On évite d'interroger la base si elle n'est pas prête (sinon erreur au scrape).
+    if (mongoose.connection.readyState !== 1) return;
+    try {
+      const count = await Project.countDocuments();
+      this.set(count);
+    } catch (err) {
+      // En cas d'erreur DB, on n'actualise pas la jauge (garde la dernière valeur).
+    }
+  },
+});
+register.registerMetric(projectsCount);
+
 // ── 4. Le middleware : mesure CHAQUE requête qui traverse l'app ──────────────
 function metricsMiddleware(req, res, next) {
   // On démarre un chrono à l'entrée de la requête
@@ -73,4 +98,4 @@ function metricsMiddleware(req, res, next) {
   next();
 }
 
-module.exports = { register, metricsMiddleware, loginAttempts, projectsCreated };
+module.exports = { register, metricsMiddleware, loginAttempts, projectsCreated, projectsCount };

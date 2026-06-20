@@ -4,7 +4,7 @@
   "tags": ["devops-portfolio", "mern", "application"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "30s",
   "time": { "from": "now-1h", "to": "now" },
   "panels": [
@@ -30,12 +30,13 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "Projets créés (cumul)",
+      "title": "Projets en base (réel)",
+      "description": "Nombre réel de projets stockés en base (jauge rafraîchie à chaque scrape). Robuste aux redémarrages du pod, contrairement au compteur cumulé.",
       "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } } },
       "targets": [
-        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(projects_created_total)" }
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "max(portfolio_projects_count)" }
       ]
     },
     {
@@ -67,10 +68,60 @@
       ]
     },
     {
+      "id": 9,
+      "type": "stat",
+      "title": "Taux de succès des connexions (%)",
+      "description": "Part des connexions réussies sur l'ensemble des tentatives depuis le démarrage. Une chute peut signaler un bug d'auth ou une attaque par force brute.",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 50 }, { "color": "green", "value": 80 } ] },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 * sum(auth_login_attempts_total{result=\"success\"}) / sum(auth_login_attempts_total)" }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Projets créés (cumul événements)",
+      "description": "Compteur d'événements de création depuis le dernier (re)démarrage du pod. Repart à zéro si le backend redémarre.",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "purple" } } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(projects_created_total)" }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Redémarrages de pods (cumul)",
+      "description": "Somme des redémarrages de conteneurs dans le namespace de l'application. Un nombre qui grimpe = crash-loop (ex. OOM).",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 } ] },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kube_pod_container_status_restarts_total{namespace=\"devops-portfolio-dev\"})" }
+      ]
+    },
+    {
       "id": 5,
       "type": "timeseries",
       "title": "Trafic — requêtes/s par route",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "reqps" } },
       "targets": [
@@ -81,7 +132,7 @@
       "id": 6,
       "type": "timeseries",
       "title": "Latence p95 par route (s)",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "s" } },
       "targets": [
@@ -92,7 +143,7 @@
       "id": 7,
       "type": "timeseries",
       "title": "Taux d'erreurs 5xx (%)",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -108,11 +159,23 @@
       "id": 8,
       "type": "timeseries",
       "title": "Connexions par résultat (par seconde)",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "short" } },
       "targets": [
         { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(auth_login_attempts_total[5m])) by (result)", "legendFormat": "{{result}}" }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Redémarrages de pods par pod (cumul)",
+      "description": "Évolution du nombre de redémarrages par pod de l'application. Une marche d'escalier = un nouveau crash.",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kube_pod_container_status_restarts_total{namespace=\"devops-portfolio-dev\"}) by (pod)", "legendFormat": "{{pod}}" }
       ]
     }
   ]
