@@ -118,7 +118,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     script {
-                        def scannerHome = tool 'SonarScanner'
+                        def scannerHome = tool 'SonarQubeScanner'
                         // La configuration (sources, exclusions, coverage...) est
                         // centralisee dans sonar-project.properties a la racine.
                         sh "${scannerHome}/bin/sonar-scanner"
