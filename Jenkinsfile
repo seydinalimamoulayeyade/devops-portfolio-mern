@@ -74,30 +74,36 @@ pipeline {
         // Terraform, K8s). Un secret détecté bloque le pipeline.
         stage('Trivy — Repo & IaC') {
             steps {
+                // NB (Docker-in-Docker) : le workspace Jenkins vit dans le volume
+                // jenkins_home. Un bind mount "$PWD:/project" serait résolu par le
+                // daemon HÔTE (chemin inexistant → dossier vide). On partage donc les
+                // volumes de Jenkins via --volumes-from et on opère sur $WORKSPACE.
                 sh '''
                     set -eu
-                    mkdir -p trivy-reports
+                    mkdir -p "$WORKSPACE/trivy-reports"
 
                     # (a) Filesystem : vuln + secret + misconfig + license → rapport SARIF
                     docker run --rm \
-                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        --volumes-from jenkins \
                         -v trivy-cache:/root/.cache/ \
-                        -v "$PWD:/project" -w /project \
+                        -w "$WORKSPACE" \
                         "$TRIVY_IMAGE" fs --scanners vuln,secret,misconfig,license \
                         --severity HIGH,CRITICAL --ignore-unfixed --no-progress \
-                        --format sarif --output /project/trivy-reports/repo.sarif /project
+                        --format sarif --output "$WORKSPACE/trivy-reports/repo.sarif" .
 
                     # (b) IaC : misconfigurations (Dockerfile, Terraform, Kubernetes) — rapport
                     docker run --rm \
+                        --volumes-from jenkins \
                         -v trivy-cache:/root/.cache/ \
-                        -v "$PWD:/project" -w /project \
-                        "$TRIVY_IMAGE" config --severity HIGH,CRITICAL --no-progress /project
+                        -w "$WORKSPACE" \
+                        "$TRIVY_IMAGE" config --severity HIGH,CRITICAL --no-progress .
 
                     # (c) Gate SECRETS : toute fuite de secret bloque le build
                     docker run --rm \
+                        --volumes-from jenkins \
                         -v trivy-cache:/root/.cache/ \
-                        -v "$PWD:/project" -w /project \
-                        "$TRIVY_IMAGE" fs --scanners secret --exit-code 1 --no-progress /project
+                        -w "$WORKSPACE" \
+                        "$TRIVY_IMAGE" fs --scanners secret --exit-code 1 --no-progress .
                 '''
             }
             post {
@@ -161,7 +167,7 @@ pipeline {
             steps {
                 sh '''
                     set -eu
-                    mkdir -p trivy-reports
+                    mkdir -p "$WORKSPACE/trivy-reports"
 
                     for pair in "backend:${BACKEND_IMAGE}" "frontend:${FRONTEND_IMAGE}"; do
                         name="${pair%%:*}"
@@ -169,18 +175,19 @@ pipeline {
                         echo "──> Scan de l'image ${name} (${image})"
 
                         # Rapport HTML lisible (template intégré) — non bloquant
+                        # --volumes-from jenkins : accès au workspace ET au docker.sock de Jenkins
                         docker run --rm \
-                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            --volumes-from jenkins \
                             -v trivy-cache:/root/.cache/ \
-                            -v "$PWD:/project" -w /project \
+                            -w "$WORKSPACE" \
                             "$TRIVY_IMAGE" image --scanners vuln,secret \
                             --severity HIGH,CRITICAL --ignore-unfixed --no-progress \
                             --format template --template "@/contrib/html.tpl" \
-                            --output "/project/trivy-reports/image-${name}.html" "${image}"
+                            --output "$WORKSPACE/trivy-reports/image-${name}.html" "${image}"
 
                         # Gate : CRITICAL corrigeable => échec du build
                         docker run --rm \
-                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            --volumes-from jenkins \
                             -v trivy-cache:/root/.cache/ \
                             "$TRIVY_IMAGE" image --scanners vuln \
                             --severity CRITICAL --ignore-unfixed --exit-code 1 \
