@@ -1,0 +1,16 @@
+# =============================================================================
+#  .trivyignore — Exceptions de scan Trivy
+# -----------------------------------------------------------------------------
+#  Une entrée par ligne. Chaque exception DOIT être justifiée et datée
+#  (traçabilité DevSecOps). Format accepté :
+#    - un ID de vulnérabilité         : CVE-2023-XXXXX
+#    - un ID de règle misconfig       : AVD-DS-0002, DS002...
+#    - un ID de règle secret          : aws-access-key-id
+#  Trivy >= 0.52 supporte aussi .trivyignore.yaml avec date d'expiration.
+# =============================================================================
+
+# Exemple (à adapter — ne rien ignorer sans raison) :
+# CVE-2024-00000   # Faux positif confirmé le 2025-01-01, paquet non exploité (path X)
+# AVD-DS-0002      # USER root toléré sur l'image de build multi-stage (non runtime)
+
+# Par défaut : aucune exception. Toute CRITICAL doit être corrigée, pas ignorée.

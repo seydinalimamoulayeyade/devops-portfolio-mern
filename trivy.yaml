@@ -1,0 +1,55 @@
+# =============================================================================
+#  trivy.yaml — Configuration centralisée Trivy (étape 07 du fil rouge)
+# -----------------------------------------------------------------------------
+#  Trivy lit automatiquement ce fichier s'il est présent à la racine, ou via
+#  l'option `--config trivy.yaml`. Les scanners réellement activés sont précisés
+#  par commande (image / fs / config) dans le Jenkinsfile et scripts/trivy-scan.sh,
+#  car tous les scanners ne s'appliquent pas à toutes les cibles.
+# =============================================================================
+
+# Niveaux de sévérité pris en compte dans les rapports.
+# (HIGH,CRITICAL par défaut ; le gate d'échec du pipeline ne cible que CRITICAL)
+severity:
+  - HIGH
+  - CRITICAL
+
+# Délai maximal d'un scan (le 1er run télécharge les bases de données).
+timeout: 10m
+
+# Pas de barre de progression (logs CI plus propres).
+no-progress: true
+
+# --- Scanners disponibles -----------------------------------------------------
+# vuln       : vulnérabilités (CVE) des paquets OS + dépendances applicatives
+# secret     : secrets en clair (clés API, tokens, mots de passe)
+# misconfig  : mauvaises configurations IaC (Dockerfile, K8s, Terraform...)
+# license    : conformité des licences des dépendances
+scan:
+  scanners:
+    - vuln
+    - secret
+    - misconfig
+
+# --- Vulnérabilités -----------------------------------------------------------
+vulnerability:
+  # Ne remonter que les CVE pour lesquelles un correctif existe (réduit le bruit).
+  ignore-unfixed: true
+
+# --- Mauvaises configurations (IaC) ------------------------------------------
+misconfiguration:
+  # Inclure les ressources conformes dans le rapport détaillé ? Non (bruit).
+  include-non-failures: false
+
+# --- Secrets ------------------------------------------------------------------
+secret:
+  # Utilise les règles intégrées de Trivy (AWS, GCP, tokens génériques, JWT...).
+  # Un fichier de règles custom pourrait être référencé ici si besoin.
+
+# --- Base de données ----------------------------------------------------------
+db:
+  # Ne pas échouer si la mise à jour de la DB est momentanément indisponible :
+  # Trivy réutilise la version en cache (utile en CI derrière un réseau instable).
+  skip-update: false
+
+# --- Fichier d'exceptions -----------------------------------------------------
+# Les vulnérabilités/secrets à accepter sont listés dans .trivyignore (racine).
