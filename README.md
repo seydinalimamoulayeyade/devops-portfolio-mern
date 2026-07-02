@@ -23,6 +23,7 @@
 | Conteneurisation | Docker + Docker Compose |
 | CI/CD | Jenkins (pipeline 7 stages) |
 | Qualité | SonarQube 10.7 + Quality Gate |
+| Sécurité | Trivy (vuln · secret · misconfig · license) |
 | Tests | Jest + Supertest + mongodb-memory-server |
 | Orchestration | Kubernetes |
 | IaC | Terraform (modules + envs dev/prod) |
@@ -33,8 +34,12 @@
 Chaque `git push` sur `main` déclenche le pipeline Jenkins :
 
 ```
-Checkout → Backend Tests → SonarQube → Quality Gate → Build & Push → Terraform Validation → Deploy K8s
+Checkout → Backend Tests → Trivy (Repo & IaC) → SonarQube → Quality Gate
+  → Build Images → Trivy (Image Scan) → Push Images → Terraform Validation → Deploy K8s
 ```
+
+> Sécurité **shift-left** : Trivy scanne le code et l'IaC avant le build, puis les
+> images avant le push (une CVE **CRITICAL** corrigeable bloque la publication).
 
 Le déploiement réel est géré par **Terraform** ; le stage Deploy rafraîchit les images via `kubectl rollout`.
 
@@ -68,7 +73,7 @@ terraform/    IaC — étape 05 (source de vérité du déploiement)
 monitoring/   Prometheus, Alertmanager, Grafana, exporters
 docs/         Documentation PDF (1 par étape)
 scripts/      Utilitaires
-Jenkinsfile · docker-compose*.yml · sonar-project.properties
+Jenkinsfile · docker-compose*.yml · sonar-project.properties · trivy.yaml · .trivyignore
 ```
 
 ## Documentation
@@ -76,6 +81,8 @@ Jenkinsfile · docker-compose*.yml · sonar-project.properties
 Un PDF par étape du fil rouge, dans [`docs/`](docs/) :
 
 `01-DOCKER` · `02-JENKINS` · `03-SONARQUBE` · `04-KUBERNETES` · `05-TERRAFORM` · `06-PROMETHEUS` · `07-GRAFANA`
+
+Étape sécurité (Markdown) : [`08-TRIVY`](docs/08-TRIVY.md) — cibles, scanners, bases de données, formats, workflow et intégration pipeline.
 
 ## Roadmap
 
@@ -87,7 +94,7 @@ Un PDF par étape du fil rouge, dans [`docs/`](docs/) :
 | 4 | Kubernetes | ✅ |
 | 5 | Terraform — IaC | ✅ |
 | 6 | Prometheus / Grafana — Monitoring | ✅ |
-| 7 | Trivy — Scan de sécurité | 🔜 |
+| 7 | Trivy — Scan de sécurité | ✅ |
 | 8 | Outils IA pour DevOps | 🔜 |
 
 ## Images Docker Hub

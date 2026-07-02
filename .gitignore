@@ -47,6 +47,10 @@ coverage/
 # SonarQube
 .scannerwork/
 
+# Trivy — rapports de scan (générés en CI/local, archivés comme artefacts)
+trivy-reports/
+*.sarif
+
 # Documentation temporaire / rapports de build (ne pas exposer publiquement)
 SONAR_QUALITY_REPORT.md
 UI_REFONTE_COMPLETE.md

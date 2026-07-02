@@ -15,6 +15,7 @@ pipeline {
         BACKEND_IMAGE     = "${DOCKERHUB_USER}/devops-portfolio-mern-backend"
         SONAR_PROJECT_KEY = 'devops-portfolio-mern'
         K8S_NAMESPACE     = 'devops-portfolio-dev'  // Namespace géré par Terraform
+        TRIVY_IMAGE       = 'aquasec/trivy:0.58.1'  // Scanner de sécurité (étape 07)
     }
 
     stages {
@@ -67,7 +68,46 @@ pipeline {
             }
         }
 
-        // ── 3. SONARQUBE ANALYSIS ─────────────────────────────────────
+        // ── 3. TRIVY — REPO & IAC (shift-left) ───────────────────────
+        // Scanne le code source AVANT de builder : vulnérabilités de
+        // dépendances, secrets en clair, mauvaises configs IaC (Dockerfile,
+        // Terraform, K8s). Un secret détecté bloque le pipeline.
+        stage('Trivy — Repo & IaC') {
+            steps {
+                sh '''
+                    set -eu
+                    mkdir -p trivy-reports
+
+                    # (a) Filesystem : vuln + secret + misconfig + license → rapport SARIF
+                    docker run --rm \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        -v trivy-cache:/root/.cache/ \
+                        -v "$PWD:/project" -w /project \
+                        "$TRIVY_IMAGE" fs --scanners vuln,secret,misconfig,license \
+                        --severity HIGH,CRITICAL --ignore-unfixed --no-progress \
+                        --format sarif --output /project/trivy-reports/repo.sarif /project
+
+                    # (b) IaC : misconfigurations (Dockerfile, Terraform, Kubernetes) — rapport
+                    docker run --rm \
+                        -v trivy-cache:/root/.cache/ \
+                        -v "$PWD:/project" -w /project \
+                        "$TRIVY_IMAGE" config --severity HIGH,CRITICAL --no-progress /project
+
+                    # (c) Gate SECRETS : toute fuite de secret bloque le build
+                    docker run --rm \
+                        -v trivy-cache:/root/.cache/ \
+                        -v "$PWD:/project" -w /project \
+                        "$TRIVY_IMAGE" fs --scanners secret --exit-code 1 --no-progress /project
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'trivy-reports/*', allowEmptyArchive: true
+                }
+            }
+        }
+
+        // ── 4. SONARQUBE ANALYSIS ─────────────────────────────────────
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
@@ -81,7 +121,7 @@ pipeline {
             }
         }
 
-        // ── 4. QUALITY GATE ──────────────────────────────────────────
+        // ── 5. QUALITY GATE ──────────────────────────────────────────
         // Bloque le pipeline si la qualité est insuffisante
         stage('Quality Gate') {
             steps {
@@ -91,10 +131,73 @@ pipeline {
             }
         }
 
-        // ── 5. BUILD & PUSH ───────────────────────────────────────────
-        // Construction et push des images Docker en une seule étape
-        // Remplace l'ancien "Build and test" + "Push images" séparés
-        stage('Build & Push') {
+        // ── 6. BUILD IMAGES ───────────────────────────────────────────
+        // Construit les images backend & frontend (sans push : on scanne d'abord).
+        stage('Build Images') {
+            steps {
+                sh '''
+                    set -eu
+
+                    # Backend
+                    docker build \
+                        -t "${BACKEND_IMAGE}:latest" \
+                        -t "${BACKEND_IMAGE}:${IMAGE_TAG}" \
+                        ./backend
+
+                    # Frontend (URL d'API injectée au build)
+                    docker build \
+                        --build-arg VITE_API_URL=/api \
+                        -t "${FRONTEND_IMAGE}:latest" \
+                        -t "${FRONTEND_IMAGE}:${IMAGE_TAG}" \
+                        ./frontend
+                '''
+            }
+        }
+
+        // ── 7. TRIVY — IMAGE SCAN (gate qualité sécurité) ─────────────
+        // Scanne les images construites (vuln + secret). Une vulnérabilité
+        // CRITICAL corrigeable bloque le pipeline AVANT toute publication.
+        stage('Trivy — Image Scan') {
+            steps {
+                sh '''
+                    set -eu
+                    mkdir -p trivy-reports
+
+                    for pair in "backend:${BACKEND_IMAGE}" "frontend:${FRONTEND_IMAGE}"; do
+                        name="${pair%%:*}"
+                        image="${pair#*:}:latest"
+                        echo "──> Scan de l'image ${name} (${image})"
+
+                        # Rapport HTML lisible (template intégré) — non bloquant
+                        docker run --rm \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            -v trivy-cache:/root/.cache/ \
+                            -v "$PWD:/project" -w /project \
+                            "$TRIVY_IMAGE" image --scanners vuln,secret \
+                            --severity HIGH,CRITICAL --ignore-unfixed --no-progress \
+                            --format template --template "@/contrib/html.tpl" \
+                            --output "/project/trivy-reports/image-${name}.html" "${image}"
+
+                        # Gate : CRITICAL corrigeable => échec du build
+                        docker run --rm \
+                            -v /var/run/docker.sock:/var/run/docker.sock \
+                            -v trivy-cache:/root/.cache/ \
+                            "$TRIVY_IMAGE" image --scanners vuln \
+                            --severity CRITICAL --ignore-unfixed --exit-code 1 \
+                            --no-progress "${image}"
+                    done
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'trivy-reports/*', allowEmptyArchive: true
+                }
+            }
+        }
+
+        // ── 8. PUSH IMAGES ────────────────────────────────────────────
+        // Publie les images sur Docker Hub — uniquement si les scans ont réussi.
+        stage('Push Images') {
             steps {
                 withCredentials([
                     usernamePassword(
@@ -103,35 +206,21 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    sh """
+                    sh '''
                         set -eu
 
-                        echo "\${DOCKER_PASS}" | docker login -u "\${DOCKER_USER}" --password-stdin
+                        echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
 
-                        # Build backend
-                        docker build \
-                            -t "\${BACKEND_IMAGE}:latest" \
-                            -t "\${BACKEND_IMAGE}:\${IMAGE_TAG}" \
-                            ./backend
-
-                        # Build frontend avec l'URL d'API injectée au build
-                        docker build \
-                            --build-arg VITE_API_URL=/api \
-                            -t "\${FRONTEND_IMAGE}:latest" \
-                            -t "\${FRONTEND_IMAGE}:\${IMAGE_TAG}" \
-                            ./frontend
-
-                        # Push toutes les images
-                        docker push "\${BACKEND_IMAGE}:latest"
-                        docker push "\${BACKEND_IMAGE}:\${IMAGE_TAG}"
-                        docker push "\${FRONTEND_IMAGE}:latest"
-                        docker push "\${FRONTEND_IMAGE}:\${IMAGE_TAG}"
-                    """
+                        docker push "${BACKEND_IMAGE}:latest"
+                        docker push "${BACKEND_IMAGE}:${IMAGE_TAG}"
+                        docker push "${FRONTEND_IMAGE}:latest"
+                        docker push "${FRONTEND_IMAGE}:${IMAGE_TAG}"
+                    '''
                 }
             }
         }
 
-        // ── 6. TERRAFORM VALIDATION ───────────────────────────────────
+        // ── 9. TERRAFORM VALIDATION ───────────────────────────────────
         // Valide la syntaxe Terraform (init + validate) et controle le formatage.
         // Pas de "terraform plan" ici : ce stage ne touche pas l'etat.
         stage('Terraform Validation') {
@@ -165,7 +254,7 @@ pipeline {
             }
         }
 
-        // ── 7. DEPLOY TO KUBERNETES ───────────────────────────────────
+        // ── 10. DEPLOY TO KUBERNETES ──────────────────────────────────
         // Redémarre les déploiements pour récupérer les nouvelles images
         // L'infrastructure K8s est gérée par Terraform, pas par ce pipeline
         stage('Deploy to Kubernetes') {
@@ -220,9 +309,12 @@ pipeline {
     Stages exécutés :
     Checkout
      Backend Tests
+     Trivy — Repo & IaC
      SonarQube Analysis
      Quality Gate
-     Build & Push
+     Build Images
+     Trivy — Image Scan
+     Push Images
      Terraform Validation
      Deploy to Kubernetes
                 """.stripIndent()
