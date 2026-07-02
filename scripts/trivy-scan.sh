@@ -84,13 +84,13 @@ scan_repo() {
 # =============================================================================
 scan_iac() {
   info "Scan IaC des configurations (misconfig : Dockerfile, Terraform, K8s)..."
-  trivy config --severity HIGH,CRITICAL --no-progress /project
-  trivy config --severity HIGH,CRITICAL --no-progress \
+  trivy config --severity HIGH,CRITICAL /project
+  trivy config --severity HIGH,CRITICAL \
     --format json --output /project/trivy-reports/iac.json /project
 
   # Non bloquant par défaut (recommandations de durcissement).
   # Pour rendre bloquant : décommenter la ligne suivante.
-  # trivy config --severity CRITICAL --exit-code 1 --no-progress /project || EXIT_CODE=1
+  # trivy config --severity CRITICAL --exit-code 1 /project || EXIT_CODE=1
   ok "Scan IaC terminé (rapport : trivy-reports/iac.json)"
 }
 

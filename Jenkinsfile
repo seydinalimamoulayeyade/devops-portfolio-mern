@@ -96,7 +96,7 @@ pipeline {
                         --volumes-from jenkins \
                         -v trivy-cache:/root/.cache/ \
                         -w "$WORKSPACE" \
-                        "$TRIVY_IMAGE" config --severity HIGH,CRITICAL --no-progress .
+                        "$TRIVY_IMAGE" config --severity HIGH,CRITICAL .
 
                     # (c) Gate SECRETS : toute fuite de secret bloque le build
                     docker run --rm \
